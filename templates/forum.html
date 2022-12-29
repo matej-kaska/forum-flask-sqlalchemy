@@ -1,0 +1,26 @@
+{% extends "sablona.html" %} {% block main %}
+<article>
+  <header class="header text-center" style="color: black; padding-top: 4%">
+    <h1><span>Forum</span></h1>
+  </header>
+</article>
+
+<section class="section position-center" id="Text" style="padding-left: 5%; padding-right: 5%">
+  <table class="table table-hover table-bordered bdr">
+    <tr>
+      <thead>
+      <th>Příspěvek</th>
+      <th>Autor</th>
+      <th>Hodnocení</th>
+      </thead>
+    </tr>
+    {% for prispevek in data %}
+    <tr>
+      <td><a style="color: white;" href= forum/{{ prispevek[0] }}>{{ prispevek[1][0:110] }}...</a></td>
+      <td>{{ prispevek[2] }}</td>
+      <td>{{ prispevek[3] }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</section>
+{% endblock %}

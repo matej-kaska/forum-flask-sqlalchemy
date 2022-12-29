@@ -1,0 +1,53 @@
+{% extends "sablona.html" %} {% block main %}
+<article>
+  <header class="header text-center" style="color: black; padding-top: 4%">
+    <h1><span>Příspěvek</span></h1>
+  </header>
+</article>
+
+<section class="section position-center" id="Text" style="padding-left: 5%; padding-right: 5%">
+  <table class="table table-hover table-bordered bdr">
+    <tr>
+      <thead>
+      <th>Příspěvek</th>
+      <th style="width: 20%">Autor: {{ prispevek[2] }}</th>
+      <th data-html="true" style="width: 14%" title="{{ hodnoceni }}">Hodnocení: {{ prispevek[3] }}</th>
+      </thead>
+    </tr>
+    <tr>
+      {% if obrazky[0] == "NULL" %}
+      <td colspan="3">{{ prispevek[1] }}</td>
+      {% else %}
+      <td colspan="2">{{ prispevek[1] }}</td>
+      {% for obrazek in obrazky %}
+      <td ><img src="{{ obrazek }}" width="256"></td>
+      {% endfor %}
+      {% endif %}
+    </tr>
+  </table>
+  </br>
+  {% if komentare %}
+  <table class="table table-hover table-bordered bdr">
+    <tr>
+      <thead>
+      <th>Komentáře</th>
+      <th>Autor</th>
+      </thead>
+    </tr>
+    {% for komentar in komentare %}
+    <tr>
+      <td>{{ komentar[1] }}</td>
+      <td style="width: 20%">{{ komentar[2] }}</td>
+    </tr>
+    {% for odpoved in odpovedi %}
+        {% if odpoved[0] == komentar[0] %}
+        <tr>
+            <td colspan="2">{{ odpoved[1] }} (Autor: {{ odpoved[2] }})</td>
+        </tr>    
+        {% endif %}
+    {% endfor %}
+    {% endfor %}
+  </table>
+  {% endif %}
+</section>
+{% endblock %}

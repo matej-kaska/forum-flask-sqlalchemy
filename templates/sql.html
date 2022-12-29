@@ -1,0 +1,191 @@
+{% extends "sablona.html" %} {% block main %}
+<article>
+  <header class="header text-center" style="color: black; padding-top: 4%">
+    <h1><span>SQL - příkazy</span></h1>
+  </header>
+</article>
+<form method="post">
+<section class="section position-center" id="Text" style="padding-left: 5%; padding-right: 5%; padding-top: 1%;">
+    <div style="align-items: flex-start; display:flex; justify-content: center; vertical-align: middle;align-items: center;">
+        <span class="badge badge-secondary" style="font-size:15px; margin-right: 15%;">Používáte příkazy jako {{ engineUser }}</span>
+        <h4 style="margin-right: 1%;">Změnit uživatele:</h4>
+        <select class="form-select" name="userselect" aria-label="Vyberte uživatele" style="margin-right: 1%;">
+            {% for user in users %}
+            {% if user == engineUser %}
+            <option selected value="{{ user }}">{{ user }}</option>
+            {% else %}
+            <option value="{{ user }}">{{ user }}</option>
+            {% endif %}
+            {% endfor %}
+        </select>
+        <input style="margin-right: 5%; width: 15%" type="text" class="form-control" name="changeuserpass" placeholder="Zadejte heslo" style="background-color: #333333; color: white"/>
+        <button type="submit" name="btn" value="changeuser" class="btn btn-primary">Změnit uživatele</button>
+    </div>
+</section>
+<section class="section position-center" id="Text" style="padding-left: 5%; padding-right: 5%; margin-top:1%;">
+  <table class="table table-hover table-bordered bdr">
+    <thead>
+        <th colspan="2">Uživatelé</th>
+    </thead>
+    {% for uzivatel in uzivatele %}
+    <tr>
+        <td colspan="2">
+            {{ uzivatel }}
+        </td>
+    </tr>
+    {% endfor %}
+    </table>
+    <table class="table table-hover table-bordered bdr">
+    <tr>
+        <td>
+            Vytvořit uživatele:
+            <input style="margin-top: 1%;" type="text" class="form-control" name="createuserinputname" placeholder="Zadejte jméno" style="background-color: #333333; color: white"/>
+            <input style="margin-top: 1%;" type="text" class="form-control" name="createuserinputpass" placeholder="Zadejte heslo" style="background-color: #333333; color: white"/>
+        </td>
+        <td style="vertical-align: middle; width: 5%;">
+            <button type="submit" name="btn" value="createuser" class="btn btn-primary">Vytvořit</button>
+        </td>
+    </tr>
+        <td>
+            Smazat uživatele:
+            <input style="margin-top: 1%;"type="text" class="form-control" name="deleteuserinputname" placeholder="Zadejte jméno" style="background-color: #333333; color: white"/>
+        </td>
+        <td style="vertical-align: middle;">
+            <button  type="submit" name="btn" value="deleteuser" class="btn btn-primary">Smazat</button>
+        </td>
+  </table>
+
+  <table class="table table-hover table-bordered bdr">
+    <thead>
+        <th colspan="2">Role</th>
+    </thead>
+    {% for role in roles %}
+    <tr>
+        <td colspan="2">
+            {{ role }}
+        </td>
+    </tr>
+    {% endfor %}
+    </table>
+    <table class="table table-hover table-bordered bdr">
+    <tr>
+        <td>
+            Vytvořit Roli:
+            <input style="margin-top: 1%;" type="text" class="form-control" name="createroleinput" placeholder="Zadejte jméno" style="background-color: #333333; color: white"/>
+        </td>
+        <td style="vertical-align: middle; width: 5%;">
+            <button type="submit" name="btn" value="createrole" class="btn btn-primary">Vytvořit</button>
+        </td>
+    </tr>
+        <td>
+            Smazat Roli:
+            <input style="margin-top: 1%;"type="text" class="form-control" name="deleteroleinput" placeholder="Zadejte jméno" style="background-color: #333333; color: white"/>
+        </td>
+        <td style="vertical-align: middle;">
+            <button  type="submit" name="btn" value="deleterole" class="btn btn-primary">Vytvořit</button>
+        </td>
+  </table>
+  <table class="table table-hover table-bordered bdr">
+        <td>
+            Přidělit roli uživateli:
+            <input style="margin-top: 1%;"type="text" class="form-control" name="grantroleuser" placeholder="Zadejte uživatele" style="background-color: #333333; color: white"/>
+            <input style="margin-top: 1%;"type="text" class="form-control" name="grantrolerole" placeholder="Zadejte roli" style="background-color: #333333; color: white"/>
+        </td>
+        <td style="vertical-align: middle; width: 5%;">
+            <button  type="submit" name="btn" value="grantrole" class="btn btn-primary">Přidělit</button>
+        </td>
+  </table>
+  <table class="table table-hover table-bordered bdr">
+    <thead>
+        <th>Role uživatele {{ roleuser }}</th>
+        <th>Vyber uživatele: <select class="form-select" name="roleselect" aria-label="Vyberte uživatele" style="margin-right: 1%; margin-left:1%">
+            {% for user in users %}
+            {% if user == roleuser %}
+            <option selected value="{{ user }}">{{ user }}</option>
+            {% else %}
+            <option value="{{ user }}">{{ user }}</option>
+            {% endif %}
+            {% endfor %}
+        </select><button style="margin-left: 20%;" type="submit" name="btn" value="changerole" class="btn btn-primary btn-sm">Vybrat</button></th>
+    </thead>
+    {% for role in rolesofuser %}
+    <tr>
+        <td colspan="2">
+            {{ role }}
+        </td>
+    </tr>
+    {% endfor %}
+    </table>
+    <table class="table table-hover table-bordered bdr">
+        <tr>
+            <td>
+                Přidat právo: (SELECT, INSERT, UPDATE, DELETE...)
+                <input style="margin-top: 1%;" type="text" class="form-control" name="grantuser" placeholder="Zadejte jméno" style="background-color: #333333; color: white"/>
+                <input style="margin-top: 1%;" type="text" class="form-control" name="grantmethod" placeholder="Zadejte metodu" style="background-color: #333333; color: white"/>
+            </td>
+            <td style="vertical-align: middle; width: 5%;">
+                <button type="submit" name="btn" value="grantbutton" class="btn btn-primary">Přidat</button>
+            </td>
+        </tr>
+            <td>
+                Odebrat právo: (SELECT, INSERT, UPDATE, DELETE...)
+                <input style="margin-top: 1%;"type="text" class="form-control" name="revokeuser" placeholder="Zadejte jméno" style="background-color: #333333; color: white"/>
+                <input style="margin-top: 1%;"type="text" class="form-control" name="revokemethod" placeholder="Zadejte metodu" style="background-color: #333333; color: white"/>
+            </td>
+            <td style="vertical-align: middle;">
+                <button  type="submit" name="btn" value="revokebutton" class="btn btn-primary">Odebrat</button>
+            </td>
+      </table>
+      <table class="table table-hover table-bordered bdr">
+        <thead>
+            <th>Práva uživatele/role {{ privuser }}</th>
+            <th>Vyber uživatele/roli: <select class="form-select" name="privuserselect" aria-label="Vyberte uživatele/roli" style="margin-right: 1%; margin-left:1%">
+                {% set usersroles = users %}
+                {% for role in roles %}
+                {{ usersroles.append(role) }}
+                {% endfor %}
+                {% for user in usersroles %}
+                {% if user == privuser %}
+                <option selected value="{{ user }}">{{ user }}</option>
+                {% else %}
+                <option value="{{ user }}">{{ user }}</option>
+                {% endif %}
+                {% endfor %}
+            </select><button style="margin-left: 20%;" type="submit" name="btn" value="changeprivuser" class="btn btn-primary btn-sm">Vybrat</button></th>
+        </thead>
+        {% if privofuser == "Nemáte dostatečná práva!"%}
+        <tr>
+            <td colspan="2">
+                {{ privofuser }}
+            </td>
+        </tr>
+        {% else %}
+        {% for priv in privofuser %}
+        <tr>
+            <td colspan="2">
+                {{ priv }}
+            </td>
+        </tr>
+        {% endfor %}
+        {% endif %}
+        </table>
+        <table class="table table-hover table-bordered bdr">
+            <thead>
+                <th>SELECT tabulky "{{ selectedtabulka }}" (LOCK)</th>
+                <th>Vyber tabulku: <select class="form-select" name="tableselect" aria-label="Vyberte tabulku" style="margin-right: 1%; margin-left:1%">
+                    {% for tabulka in tabulky %}
+                    {% if tabulka == selectedtabulka %}
+                    <option selected value="{{ tabulka }}">{{ tabulka }}</option>
+                    {% else %}
+                    <option value="{{ tabulka }}">{{ tabulka }}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select><button style="margin-left: 20%;" type="submit" name="btn" value="changetabulka" class="btn btn-primary btn-sm">Vybrat</button></th>
+            </thead>
+                <td colspan="2">
+                    {{ tabulkydata }}
+                </td>
+            </table>
+</section>
+</form>
+{% endblock %}

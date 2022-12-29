@@ -1,0 +1,53 @@
+{% extends "sablona.html" %} {% block main %}
+<article>
+  <header class="header text-center" style="color: black; padding-top: 5%">
+    <div class="waviy">
+      <span style="--i:1">R</span>
+      <span style="--i:2">D</span>
+      <span style="--i:3">B</span>
+      <span style="--i:4">S</span>
+     </div>
+  </header>
+  <section class="section position-center" id="Text" style="padding-left: 15%; padding-right: 15%; padding-top: 15%">
+    <form action="" method="post">
+      <fieldset>
+        <div class="input-group mb-2">
+          <div class="input-group-prepend">
+            <span class="input-group-text" id="basic-addon1">Přezdívka</span>
+          </div>
+          <input id="forUsername" type="text" class="form-control" name="username" placeholder="Zadej přezdívku" required style="background-color: #333333; color: white"/>
+        </div>
+        <div class="input-group mb-2">
+          <div class="input-group-prepend">
+            <span class="input-group-text" id="basic-addon1">Heslo</span>
+          </div>
+          <input id="forPassword" type="password" class="form-control" name="password" placeholder="Zadej heslo" required style="background-color: #333333; color: white"/>
+        </div>
+        <div class="input-group mb-2">
+            <div class="input-group-prepend">
+              <span class="input-group-text" id="basic-addon1">Email</span>
+            </div>
+            <input id="forEmail" type="email" class="form-control" name="email" placeholder="Zadej email" required style="background-color: #333333; color: white"/>
+        </div>
+        <div class="float-right">
+            <a href="/">
+                <button type="button" name="btn" value="login" style="justify-content: left; margin-top: 3px;" class="btn btn-outline-dark">
+                Přihlásit se
+                </button>
+            </a>
+          <button class="btn btn-dark" type="submit" name="btn" value="register" style="justify-content: left; margin-top: 3px;">
+            Zaregistrovat se
+          </button>
+        </div>
+      </fieldset>
+    </form>
+  </section>
+</article>
+
+<footer>
+  <hr class="featurette-divider" style="background-color: white">
+  <div class="form-row">
+    <div class="col text-right"><small><script src="{{url_for('static', filename='svatky.js')}}"></script></small></div>
+  </div>
+</footer>
+{% endblock %}

@@ -1,0 +1,217 @@
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+/* FOOTER */
+footer{
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 60px;
+    color: white;
+    padding-left: 11%;
+    padding-right: 11%;
+}
+
+/*WALLPAPER*/
+body {
+    background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+    background-size: 400% 400%;
+    animation: gradient 12s ease infinite;
+    margin-bottom: 60px;
+}
+@keyframes gradient {
+0% {
+    background-position: 0% 50%;
+}
+50% {
+    background-position: 100% 50%;
+}
+100% {
+    background-position: 0% 50%;
+}
+}
+
+/* TABULKY */
+.bdr {
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #343a40;
+    color: white;
+}
+
+
+/* MEZIŘÁDKOVÉ ČÁRKY */
+.featurette-divider {
+    background-color: #e73c7e;
+}
+
+/* UNIVERZITA SEZNAM */
+h2 {
+    color: white;
+    cursor: pointer;
+    letter-spacing: 7px;
+}
+
+input[type="text"] {
+    background-color: #333333;
+    color: white;
+}
+span.input-group-text {
+    background-color: #333333;
+    color: rgb(214, 211, 211);
+}
+
+/* NADPIS NOSQL NA HOMEPAGE */
+.waviy {
+  position: relative;
+  -webkit-box-reflect: below -20px linear-gradient(transparent, rgba(0,0,0,.2));
+  font-size: 125px;
+}
+.waviy span {
+  position: relative;
+  display: inline-block;
+  color: #fff;
+  text-transform: uppercase;
+  animation: waviy 1s infinite;
+  animation-delay: calc(.1s * var(--i));
+  
+}
+@keyframes waviy {
+0%,40%,100% {
+    transform: translateY(0)
+}
+20% {
+    transform: translateY(-20px)
+}
+}
+
+.badge-secondary {
+    background-color: #343a40;
+}
+
+/*HEADER*/
+h1 {
+color: hsl(0, 0%, 28%);
+font-size: 50px;
+font-weight: bold;
+font-family: monospace;
+letter-spacing: 7px;
+cursor: pointer;
+text-align: center;
+}
+h1 span {
+transition: 0.5s ease-out;
+}
+h1:hover span:nth-child(1) {
+margin-right: 5px;
+}
+h1:hover span:nth-child(2) {
+margin-left: 30px;
+}
+h1:hover span {
+color: #fff;
+text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 40px #fff;
+}
+
+/* SEKCE */
+section {
+    padding-left: 17.5%;
+    padding-right: 17.5%;
+    text-align: center;
+    color: #333333;
+}
+
+.table-hover tbody tr:hover td, .table-hover tbody tr:hover th {
+    color: rgb(255, 255, 255);
+}
+
+.mongogrid_id {
+    position: relative;
+    width: 60px;
+    height: 62px;
+}
+
+.mongogridpracoviste {
+    position: relative;
+    width: 200px;
+    height: 62px;
+}
+
+.mongogridtelefon {
+    position: relative;
+    width: 300px;
+    height: 62px;
+}
+
+.mongogridemail {
+    position: relative;
+    width: 300px;
+    height: 62px;
+}
+
+.alert {
+    position: absolute;
+    width: 100%;
+}
+
+/* ANIMACE REFRESH */
+@keyframes rotate {
+    from {transform: rotate(0deg)}
+    to {transform: rotate(360deg)}
+}
+    
+.refresh-start {
+    animation-name: rotate;
+    animation-duration: 1s;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+    animation-play-state: paused;
+}
+
+
+/* CHECKBOXY*/
+input[type=checkbox] {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    background-color: #00000091;
+    margin-right: 8px;
+    position: relative;
+}
+
+input[type=checkbox]::before {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 3px;
+    background-color: #0275d8;
+    transform: translate(8px, 13px) rotate(-45deg);
+    transform-origin: left;
+    transition: 150ms all linear;
+    transition-delay: 0ms;
+}
+
+input[type=checkbox]::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 3px;
+    background-color: #0275d8;
+    transform: translate(1px, 8px) rotate(45deg);
+    transform-origin: left;
+    transition: 150ms all linear;
+    transition-delay: 150ms;
+}
+
+input[type=checkbox]:checked::before {
+    width: 14px;
+    transition-delay: 150ms;
+}
+
+input[type=checkbox]:checked::after {
+    width: 10px;
+    transition-delay: 0ms;
+}
