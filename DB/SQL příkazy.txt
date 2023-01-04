@@ -1,0 +1,251 @@
+A)
+1) [Průměrný počet řádků na jednu tabulku]
+SELECT table_schema as "Schema", FLOOR(AVG(row_count)) AS "Průměrný počet řádků na jednu tabulku"
+FROM (
+  SELECT table_schema, count_rows_of_table(table_schema, table_name) AS row_count
+  FROM information_schema.tables
+  WHERE table_schema NOT IN ('pg_catalog', 'information_schema') 
+  AND table_type = 'BASE TABLE'
+) AS per_table_count_subquery
+GROUP BY table_schema
+
+2) [Počet hodnocení na příspěvku, které jsou menší než průměrné hodnocení všech příspěvků]
+SELECT p.nazev, COUNT(h.hodnoceni) AS hodnota
+FROM prispevky AS p
+LEFT JOIN hodnoceni AS h
+ON p.id = h.prispevek_id
+WHERE hodnoceni < (
+	SELECT AVG(h.hodnoceni)
+	FROM hodnoceni h
+)
+GROUP BY (p.nazev);
+
+3) [Vypsání všech příspěvků podle průměru jejich hodnocení. Od nejlépe hodnoceného po nejhůře]
+SELECT p.nazev, AVG(h.hodnoceni) AS hodnoceni, p.autor
+FROM prispevky AS p
+LEFT JOIN hodnoceni AS h
+ON p.id = h.prispevek_id
+GROUP BY (p.nazev, p.autor)
+ORDER BY hodnoceni DESC;
+
+4) [Hierarchie; Vypsání všech uživatelů, jejich e-mailů a počtu příspěvků, kteří jsou moderátoři, admini nebo owneři]
+SELECT u.prezdivka, r.nazev, u.email, COUNT(p.id) AS pocet_prispevku
+FROM uzivatele AS u
+LEFT JOIN uzivatele_role AS ur
+ON u.id = ur.uzivatel_id
+LEFT JOIN role AS r
+ON ur.role_id = r.id
+LEFT JOIN prispevky AS p
+ON u.id = p.uzivatel_id
+WHERE r.id > 1
+GROUP BY u.id, r.id
+ORDER BY r.id DESC;
+
+B) [Vypsání počtu ownerů, adminů, moderátorů, uživatelů a počet jejich příspěvků]
+CREATE OR REPLACE VIEW number_of_users AS
+    SELECT r.nazev, COUNT(r.nazev) AS pocet_uzivatelu, COUNT(p.id) AS pocet_prispevku
+    FROM role AS r
+    RIGHT OUTER JOIN uzivatele_role AS ur
+    ON r.id = ur.role_id
+    INNER JOIN uzivatele AS u
+    ON u.id = ur.uzivatel_id
+    LEFT OUTER JOIN prispevky AS p
+    ON p.uzivatel_id = u.id
+    GROUP BY r.nazev
+    ORDER BY COUNT(r.nazev) ASC;
+    
+SELECT * FROM number_of_users;
+
+C) [Vytvoření indexového souboru nad sloupcem obsah v tabulce prispevky]
+CREATE UNIQUE INDEX idx_prispevky
+ON prispevky(obsah);
+
+D) [Funkce na výpočet komentářů v daném příspěvku]
+CREATE OR REPLACE FUNCTION public.count_comm(IN komentar integer)
+    RETURNS integer
+    LANGUAGE 'plpgsql'
+    VOLATILE
+    PARALLEL UNSAFE
+    COST 100
+    
+AS $BODY$
+DECLARE celkem integer;
+
+BEGIN
+	SELECT COUNT(k.id) INTO celkem
+	FROM komentare k
+	JOIN prispevky p
+	ON p.id = k.prispevek_id
+	WHERE k.prispevek_id = komentar;
+	RETURN celkem;
+END;
+$BODY$;
+
+SELECT count_comm(1);
+
+E) [Vyměnit všechny hodnocení za náhodně vygenerované hodnocení (bez "Procedure" a "Transaction", doplněno v bodě G )]
+CREATE OR REPLACE FUNCTION public.random_hodnoceni()
+    RETURNS void
+    LANGUAGE 'plpgsql'
+    VOLATILE
+    PARALLEL UNSAFE
+    COST 100
+    
+AS $BODY$
+DECLARE 
+	cur CURSOR FOR SELECT id, hodnoceni, uzivatel_id, prispevek_id FROM hodnoceni;
+	cur_row RECORD;
+BEGIN
+	open cur;
+LOOP
+	fetch cur into cur_row;
+	EXIT WHEN NOT FOUND;
+	UPDATE hodnoceni SET hodnoceni = trunc(random() * 5 + 1) WHERE cur_row.id = hodnoceni.id;
+END LOOP;
+	close cur;
+END;
+$BODY$;
+
+F) [Trigger; Logování (zaznamenávání) změn dat v tabulce uzivatele]
+CREATE OR REPLACE FUNCTION public.uzivatele_changes()
+    RETURNS trigger
+    LANGUAGE 'plpgsql'
+    VOLATILE
+    COST 100
+AS $BODY$
+BEGIN
+	IF NEW.prezdivka <> OLD.prezdivka OR NEW.heslo <> OLD.heslo OR NEW.email <> OLD.email THEN
+		 INSERT INTO uzivatele_audits(uzivatel_id,prezdivka,heslo,email,zmena)
+		 VALUES(OLD.id,OLD.prezdivka,OLD.heslo,OLD.email,now());
+	END IF;
+
+	RETURN NEW;
+END;
+$BODY$;
+
+------> TRIGER <------
+
+CREATE TRIGGER uzivatele_change()
+	BEFORE UPDATE
+	ON uzivatele
+	FOR EACH ROW	
+	EXECUTE PROCEDURE uzivatele_changes();
+
+-----> UPDATE <-----
+
+UPDATE uzivatele
+SET email = 'kaska@gmail.com'
+WHERE id = 4;
+
+G) [Transakce; 50% šance na spuštění funkce E ]
+CREATE OR REPLACE PROCEDURE public.random_random_hodnoceni()
+    LANGUAGE 'plpgsql'
+    
+AS $BODY$
+DECLARE 
+	cur CURSOR FOR SELECT id, hodnoceni, uzivatel_id, prispevek_id FROM hodnoceni;
+	cur_row RECORD;
+BEGIN
+	open cur;
+LOOP
+	fetch cur into cur_row;
+	EXIT WHEN NOT FOUND;
+	UPDATE hodnoceni SET hodnoceni = trunc(random() * 5 + 1) WHERE cur_row.id = hodnoceni.id;
+END LOOP;
+	close cur;
+IF trunc(random() * 2 + 1) = 1 THEN
+    COMMIT;
+	RAISE NOTICE 'Commitnuto! (Success)';
+ELSE
+	ROLLBACK;
+	RAISE NOTICE 'Rollbacknuto! (Fail)';
+END IF;
+END;
+$BODY$;
+
+CALL random_random_hodnoceni()
+
+H) [Správa uživatelů a rolí; PLNĚ implementováno ve vizualizaci (SQLalchemy - ORM)]
+CREATE USER kaska WITH PASSWORD '123';
+CREATE ROLE kaskaR;
+GRANT kaskaR TO kaska;
+SELECT rolname FROM pg_roles WHERE pg_has_role( 'kaska', oid, 'member');
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO kaskaR;
+SELECT DISTINCT privilege_type FROM information_schema.table_privileges AS tp WHERE grantee = 'kaska'
+SELECT DISTINCT privilege_type FROM information_schema.table_privileges AS tp WHERE grantee = 'kaskaR'
+REVOKE SELECT ON ALL TABLES IN SCHEMA public FROM kaskaR;
+DROP ROLE kaskaR
+DROP USER kaska
+
+I) [LOCK TABLE; Implementováno ve vizualizaci]
+#1 Session
+BEGIN;
+LOCK TABLE role IN ACCESS EXCLUSIVE MODE;
+
+#2 Session
+SELECT * FROM role;
+
+
+UNLOCK = COMMIT, ROLLBACK
+
+[Doplňková funkce k bodu A) 1)]
+CREATE OR REPLACE FUNCTION public.count_rows_of_table(IN schema text,IN tablename text)
+    RETURNS integer
+    LANGUAGE 'plpgsql'
+    VOLATILE
+    PARALLEL UNSAFE
+    COST 100
+    
+AS $BODY$
+DECLARE
+  query_template CONSTANT TEXT NOT NULL :='SELECT COUNT(*) FROM "?schema"."?tablename"';
+
+  query CONSTANT TEXT NOT NULL :=
+    REPLACE(
+      REPLACE(
+        query_template, '?schema', schema),
+     '?tablename', tablename);
+
+  result INT NOT NULL := -1;
+BEGIN
+  EXECUTE query INTO result;
+  RETURN result;
+END;
+$BODY$;
+
+ -[Ostatní doplňkové selecty]-
+[Vypsání uživatelů, kteří mají email "XXX@gmail.com" nebo "XXX@seznam.cz" a zároveň mají delší nebo stejně dlouho přezdívku než 11 znaků a jsou seřazeny od nejdelší přezdívky]
+SELECT prezdivka, email, heslo FROM uzivatele
+WHERE email LIKE ANY ('{%@gmail.com, %@seznam.cz}')
+GROUP BY id
+HAVING LENGTH(prezdivka) >= 11
+ORDER BY LENGTH(prezdivka) DESC;
+
+[Vypsání všech příspěvků podle průměru jejich hodnocení. Od nejlépe hodnoceného po nejhůře]
+SELECT p.nazev, AVG(h.hodnoceni) AS hodnoceni
+FROM prispevky AS p
+LEFT JOIN hodnoceni AS h
+ON p.id = h.prispevek_id
+GROUP BY (p.nazev)
+ORDER BY hodnoceni DESC;
+
+[Vypsání všech uživatelů a jejich e-mailů, kteří jsou moderátoři, admini nebo owneři]
+SELECT r.nazev, u.prezdivka, u.email
+FROM uzivatele AS u
+LEFT JOIN uzivatele_role AS ur
+ON u.id = ur.uzivatel_id
+LEFT JOIN role AS r
+ON ur.role_id = r.id
+WHERE r.id > 1
+ORDER BY r.id DESC;
+
+[Vypsání kolik ownerů, adminů, moderátorů a uživatelů je zaregistrovaných]
+CREATE OR REPLACE VIEW number_of_users AS
+    SELECT r.nazev, COUNT(r.nazev)
+    FROM role AS r
+    RIGHT JOIN uzivatele_role AS ur
+    ON r.id = ur.role_id
+    GROUP BY r.nazev
+    ORDER BY COUNT(r.nazev) ASC;
+    
+SELECT * FROM number_of_users;
