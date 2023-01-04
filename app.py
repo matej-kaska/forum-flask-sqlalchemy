@@ -30,7 +30,7 @@ postgre.create_all()
 
 def queryToList(query):
     finalList = []
-    if query == None or query == "error" or query == []:
+    if query == None or query == "error":
         return "Nemáte dostatečná práva!"
     for data in query:
         for dat in data:
@@ -122,7 +122,6 @@ def forum():
                 item = str(item)[10:13]
                 data[i].append(item)
                 i = i+1
-            print(data)
             return render_template("forum.html", session=session, role=role(session), data=data)
         return catchall(path)
     else:

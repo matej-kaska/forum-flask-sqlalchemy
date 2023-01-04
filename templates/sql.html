@@ -142,7 +142,9 @@
             <th>Vyber uživatele/roli: <select class="form-select" name="privuserselect" aria-label="Vyberte uživatele/roli" style="margin-right: 1%; margin-left:1%">
                 {% set usersroles = users %}
                 {% for role in roles %}
+                {% if role not in usersroles %}
                 {{ usersroles.append(role) }}
+                {% endif %}
                 {% endfor %}
                 {% for user in usersroles %}
                 {% if user == privuser %}
@@ -153,10 +155,10 @@
                 {% endfor %}
             </select><button style="margin-left: 20%;" type="submit" name="btn" value="changeprivuser" class="btn btn-primary btn-sm">Vybrat</button></th>
         </thead>
-        {% if privofuser == "Nemáte dostatečná práva!"%}
+        {% if privofuser == [] %}
         <tr>
             <td colspan="2">
-                {{ privofuser }}
+                Uživatel/role nemá žádná práva nebo nemáte dostatečná práva!
             </td>
         </tr>
         {% else %}
