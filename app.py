@@ -1,12 +1,13 @@
 from SQLModels import postgre, Uzivatele, Role, Prispevky, Hodnoceni, Komentare, Odpovedi, uzivatele_role
 from SQL import engine, createUser, deleteUser, listUsers, createRole, deleteRole, listRolesOfUser, listRoles, grant, revoke, showGrant, setRole, lockTable, listTables
 from flask import Flask, render_template, request, session, flash, redirect, url_for
-from sqlalchemy import func
+from sqlalchemy import func, create_engine
 import hashlib
 
 data = []
 path = ""
 engineUser = "postgres"
+flasksqlalchemy = True
 
 flaskApp = Flask(__name__)
 flaskApp.app_context().push()
@@ -25,8 +26,12 @@ revoke("SELECT", "matejr", "postgres", "123")
 deleteRole("matejr", "postgres", "123")
 deleteUser("matej", "postgres", "123") """
 
+#flask-sqlalchemy session
 postgre.init_app(flaskApp)
 postgre.create_all()
+
+#sqlalchemy session
+postgreSQL = create_engine("postgresql://postgres:123@localhost:5432/forum")
 
 def queryToList(query):
     finalList = []
@@ -37,10 +42,43 @@ def queryToList(query):
             finalList.append(dat)
     return finalList
 
+def prispevekData(komentareQuery, obrazkyQuery):
+    komentare = []
+    odpovedi = []
+    obrazky = []
+    komentareIDs = []
+    rawOdpovedi = []
+    rawKomentare = komentareQuery
+    for komentar in rawKomentare:
+        comm = []
+        for koment in komentar:
+            comm.append(koment)
+        komentareIDs.append(comm[0])
+        komentare.append(comm)
+    for odpoved in komentareIDs:
+        if flasksqlalchemy:
+            rawOdpovedi.append(postgre.session.query(Odpovedi.komentar_id, Odpovedi.text, Uzivatele.prezdivka).outerjoin(Uzivatele).filter(Odpovedi.komentar_id==odpoved).all())
+        else:
+            rawOdpovedi.append(postgreSQL.execute("SELECT o.komentar_id, o.text, u.prezdivka FROM odpovedi AS o LEFT JOIN komentare AS k ON o.komentar_id = k.id LEFT JOIN uzivatele AS u ON u.id = o.uzivatel_id WHERE k.id='{0}'".format(odpoved)))
+    for rawOdpoved in rawOdpovedi:
+        for odpoved in rawOdpoved:
+            odpo = []
+            for reply in odpoved:
+                odpo.append(reply)
+            odpovedi.append(odpo)
+    rawObrazky = obrazkyQuery
+    for obrazek in rawObrazky:
+        for obraz in obrazek:
+            obrazky.append(obraz)
+    return komentare, odpovedi, obrazky
+
 def role(session):
     username = session.get("username")
     if username:
-        list = postgre.session.query(Role.id).join(Uzivatele, Role.roles).filter(Uzivatele.prezdivka==username).all()
+        if flasksqlalchemy:
+            list = postgre.session.query(Role.id).join(Uzivatele, Role.roles).filter(Uzivatele.prezdivka==username).all()
+        else:
+            list = postgreSQL.execute("SELECT r.id FROM role AS r LEFT JOIN uzivatele_role AS ur ON r.id = ur.role_id LEFT JOIN uzivatele AS u ON ur.uzivatel_id = u.id WHERE u.prezdivka = '{0}'".format(username))
         highest = 0
         for rolelist in list:
             for role in rolelist:
@@ -58,7 +96,10 @@ def role(session):
 def hodnoceniList(id):
     finalList = []
     finalString = ""
-    list = postgre.session.query(Hodnoceni.hodnoceni, Uzivatele.prezdivka).join(Uzivatele).filter(Hodnoceni.prispevek_id == id).all()
+    if flasksqlalchemy:
+        list = postgre.session.query(Hodnoceni.hodnoceni, Uzivatele.prezdivka).join(Uzivatele).filter(Hodnoceni.prispevek_id == id).all()
+    else:
+        list = postgreSQL.execute("SELECT h.hodnoceni, u.prezdivka FROM uzivatele AS u LEFT JOIN hodnoceni AS h ON h.uzivatel_id = u.id LEFT JOIN prispevky AS p ON p.id = h.prispevek_id WHERE p.id = {0}".format(id)).fetchall()
     for hodnoceni in list:
         prezdivka = hodnoceni[1]
         hodnota = str(hodnoceni[0])
@@ -77,19 +118,33 @@ def register():
         if request.form["btn"] == "register":
             username = request.form["username"]
             email = request.form["email"]
-            if username not in postgre.session.execute(postgre.select(Uzivatele.prezdivka)).scalars() and email not in postgre.session.execute(postgre.select(Uzivatele.email)).scalars():
+            registrable = False
+            if flasksqlalchemy:
+                if username not in postgre.session.execute(postgre.select(Uzivatele.prezdivka)).scalars() and email not in postgre.session.execute(postgre.select(Uzivatele.email)).scalars():
+                    registrable = True
+            else:
+                if username not in queryToList(postgreSQL.execute("SELECT prezdivka FROM uzivatele").fetchall()) and email not in queryToList(postgreSQL.execute("SELECT email FROM uzivatele").fetchall()):
+                    registrable = True 
+            if registrable:
                 hashed_pass = hashlib.sha256(request.form["password"].encode("utf-8")).hexdigest()
-                register = Uzivatele(
-                    prezdivka = request.form["username"],
-                    heslo = hashed_pass,
-                    email = request.form["email"]
-                )
-                postgre.session.add(register)
-                postgre.session.commit()
-                id = postgre.session.execute(postgre.select(Uzivatele.id).where(Uzivatele.prezdivka==username)).scalar()
-                roleinsert = uzivatele_role.insert().values(role_id=1, uzivatel_id=id)
-                postgre.session.execute(roleinsert)
-                postgre.session.commit()
+                if flasksqlalchemy:
+                    register = Uzivatele(
+                        prezdivka = request.form["username"],
+                        heslo = hashed_pass,
+                        email = request.form["email"]
+                    )
+                    postgre.session.add(register)
+                    postgre.session.commit()
+                else:
+                    postgreSQL.execute("INSERT INTO uzivatele (prezdivka, heslo, email) VALUES ('{0}', '{1}', '{2}')".format(username, hashed_pass, email))
+                if flasksqlalchemy:
+                    id = postgre.session.execute(postgre.select(Uzivatele.id).where(Uzivatele.prezdivka==username)).scalar()
+                    roleinsert = uzivatele_role.insert().values(role_id=1, uzivatel_id=id)
+                    postgre.session.execute(roleinsert)
+                    postgre.session.commit()
+                else:
+                    id = postgreSQL.execute("SELECT id FROM uzivatele WHERE prezdivka = '{0}'".format(username)).fetchone()
+                    postgreSQL.execute("INSERT INTO uzivatele_role (role_id, uzivatel_id) VALUES ('1', '{0}')".format(id[0]))
                 session["username"] = request.form["username"]
                 session["engineUser"] = "postgres"
                 session["enginePass"] = "123"
@@ -108,20 +163,34 @@ def forum():
     if session.get("username"):
         if request.method == "GET":
             data.clear()
-            prispevek = []
-            nextdata = []
-            i=0
-            rawdata = postgre.session.query(Prispevky.id, Prispevky.obsah, Uzivatele.prezdivka).outerjoin(Uzivatele).all()
-            for prispevky in rawdata:
+            if flasksqlalchemy:
                 prispevek = []
-                for smalldata in prispevky:
-                    prispevek.append(smalldata)
-                data.append(prispevek)
-            nextdata = postgre.session.query(func.avg(Hodnoceni.hodnoceni)).join(Prispevky).group_by(Prispevky.id).all()
-            for item in nextdata:
-                item = str(item)[10:13]
-                data[i].append(item)
-                i = i+1
+                nextdata = []
+                i=0
+                rawdata = postgre.session.query(Prispevky.id, Prispevky.obsah, Uzivatele.prezdivka).outerjoin(Uzivatele).all()
+                for prispevky in rawdata:
+                    prispevek = []
+                    for smalldata in prispevky:
+                        prispevek.append(smalldata)
+                    data.append(prispevek)
+                nextdata = postgre.session.query(func.avg(Hodnoceni.hodnoceni)).join(Prispevky).group_by(Prispevky.id).all()
+                for item in nextdata:
+                    item = str(item)[10:13]
+                    data[i].append(item)
+                    i = i+1
+            else:
+                rawdata = postgreSQL.execute("SELECT p.id, p.obsah, u.prezdivka, AVG(h.hodnoceni) FROM prispevky AS p LEFT OUTER JOIN uzivatele AS u ON u.id = p.uzivatel_id LEFT JOIN hodnoceni AS h ON h.prispevek_id = p.id GROUP BY p.id, u.prezdivka").fetchall()
+                prispevekid = 0
+                for prispevek in range(0, int(len(rawdata))):
+                    prispevek = []
+                    for i in range(0,4):
+                        if i == 3:
+                            prispevek.append(str(rawdata[prispevekid][i])[0:3])
+                        else:
+                            prispevek.append(rawdata[prispevekid][i])
+                        i = i + 1
+                    prispevekid = prispevekid + 1
+                    data.append(prispevek)
             return render_template("forum.html", session=session, role=role(session), data=data)
         return catchall(path)
     else:
@@ -137,9 +206,23 @@ def index():
         if request.form["btn"] == "login":
             username = request.form["username"]
             password = request.form["password"]
-            if username in postgre.session.execute(postgre.select(Uzivatele.prezdivka)).scalars():
+            loggable = False
+            loggedin = False
+            if flasksqlalchemy:
+                if username in postgre.session.execute(postgre.select(Uzivatele.prezdivka)).scalars():
+                    loggable = True
+            else:
+                if username in queryToList(postgreSQL.execute("SELECT prezdivka FROM uzivatele").fetchall()):
+                    loggable = True
+            if loggable:
                 hashed_password = hashlib.sha256(password.encode("utf-8")).hexdigest()
-                if hashed_password == postgre.session.execute(postgre.select(Uzivatele.heslo).where(Uzivatele.prezdivka == username)).scalar():
+                if flasksqlalchemy:
+                    if hashed_password == postgre.session.execute(postgre.select(Uzivatele.heslo).where(Uzivatele.prezdivka == username)).scalar():
+                        loggedin = True
+                else:
+                    if hashed_password == postgreSQL.execute("SELECT heslo FROM uzivatele WHERE prezdivka = '{0}'".format(username)).fetchone()[0]:
+                        loggedin = True
+                if loggedin:
                     session["username"] = request.form["username"]
                     session["engineUser"] = "postgres"
                     session["enginePass"] = "123"
@@ -159,41 +242,25 @@ def index():
                 session.pop("username")
             flash("logout")
             return render_template("index.html", session=session, role=role(session))
+        elif request.form["btn"] == "flask":
+            return catchall(path)
     return render_template("index.html", session=session, role=role(session))
 
 @flaskApp.route("/forum/<id>", methods=["GET"])
 def prispevek(id):
     if session.get("username"):
         if request.method == "GET":
-            prispevek = []
-            komentare = []
-            odpovedi = []
-            obrazky = []
-            komentareIDs = []
-            rawOdpovedi = []
+            
             for pris in data:
                 if str(pris[0]) == id:
                     prispevek = pris
             hodnoceni = hodnoceniList(id)
-            rawKomentare = postgre.session.query(Komentare.id, Komentare.text, Uzivatele.prezdivka).outerjoin(Uzivatele).filter(Komentare.prispevek_id==id).all()
-            for komentar in rawKomentare:
-                comm = []
-                for koment in komentar:
-                    comm.append(koment)
-                komentareIDs.append(comm[0])
-                komentare.append(comm)
-            for odpoved in komentareIDs:
-                rawOdpovedi.append(postgre.session.query(Odpovedi.komentar_id, Odpovedi.text, Uzivatele.prezdivka).outerjoin(Uzivatele).filter(Odpovedi.komentar_id==odpoved).all())
-            for rawOdpoved in rawOdpovedi:
-                for odpoved in rawOdpoved:
-                    odpo = []
-                    for reply in odpoved:
-                        odpo.append(reply)
-                    odpovedi.append(odpo)
-            rawObrazky = postgre.session.query(Prispevky.obrazek).filter(Prispevky.id==id).all()
-            for obrazek in rawObrazky:
-                for obraz in obrazek:
-                    obrazky.append(obraz)
+            if flasksqlalchemy:
+                komentare, odpovedi, obrazky = prispevekData(postgre.session.query(Komentare.id, Komentare.text, Uzivatele.prezdivka).outerjoin(Uzivatele).filter(Komentare.prispevek_id==id).all(),postgre.session.query(Prispevky.obrazek).filter(Prispevky.id==id).all())
+                print("flasksqlalchemy")
+            else:
+                komentare, odpovedi, obrazky = prispevekData(postgreSQL.execute("SELECT k.id, k.text, u.prezdivka FROM komentare AS k LEFT JOIN uzivatele AS u ON u.id = k.uzivatel_id WHERE k.prispevek_id = '{0}'".format(id)).fetchall(),postgreSQL.execute("SELECT obrazek FROM prispevky WHERE id = {0}".format(id)))
+                print("sqlalchemy")
             return render_template("prispevek.html", session=session, role=role(session), prispevek=prispevek, hodnoceni=hodnoceni, komentare=komentare, odpovedi=odpovedi, obrazky=obrazky)
         return catchall(path)
     else:
@@ -305,6 +372,16 @@ def catchall(path):
         if request.form["btn"] == "logout":
             session.pop("username")
             flash("logout")
+            return redirect(url_for("index"))
+        if request.form["btn"] == "flask":
+            global flasksqlalchemy
+            if flasksqlalchemy == True:
+                flasksqlalchemy = False
+                session["engine"] = "sqlalchemy"
+            else:
+                flasksqlalchemy = True
+                session["engine"] = "flask-sqlalchemy"
+                
             return redirect(url_for("index"))
 
 if __name__ == "__main__":
