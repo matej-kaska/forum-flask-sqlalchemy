@@ -9,9 +9,11 @@
   <table class="table table-hover table-bordered bdr">
     <tr>
       <thead>
-      <th>Příspěvek</th>
-      <th>Autor</th>
-      <th>Hodnocení</th>
+      <th scope="row" style="text-align: center; vertical-align: middle;">Příspěvek
+        <a type="button" href="/forum/new" style="text-align: center; vertical-align: middle;overflow: hidden;border: none;white-space: nowrap;padding: 0px;position: sticky;left: 99%;" class="btn btn-link"><span style=" font-size:26px;" class="bi bi-plus-square"></span></a>
+      </th>
+      <th style="text-align: center; vertical-align: middle;">Autor</th>
+      <th style="text-align: center; vertical-align: middle;">Hodnocení</th>
       </thead>
     </tr>
     {% for prispevek in data %}

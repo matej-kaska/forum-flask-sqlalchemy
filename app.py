@@ -223,7 +223,9 @@ def index():
                     if hashed_password == postgreSQL.execute("SELECT heslo FROM uzivatele WHERE prezdivka = '{0}'".format(username)).fetchone()[0]:
                         loggedin = True
                 if loggedin:
+                    id =  postgreSQL.execute("SELECT id FROM uzivatele WHERE prezdivka = '{0}'".format(username)).fetchone()[0]
                     session["username"] = request.form["username"]
+                    session["userid"] = id
                     session["engineUser"] = "postgres"
                     session["enginePass"] = "123"
                     session["roleuser"] = ""
@@ -250,7 +252,6 @@ def index():
 def prispevek(id):
     if session.get("username"):
         if request.method == "GET":
-            
             for pris in data:
                 if str(pris[0]) == id:
                     prispevek = pris
@@ -365,6 +366,28 @@ def sql():
     else:
         return redirect(url_for("index"))
 
+@flaskApp.route("/forum/new", methods=["GET", "POST"])
+def new():
+    if session.get("username"):
+        if request.method == "GET":
+            return render_template("new.html",session=session,role=role(session))
+        if request.method == "POST":
+            if request.form["btn"] == "addPrispevek":
+                nazev = request.form.get("nazev")
+                obsah = request.form.get("text")
+                obrazek = request.form.get("obrazek")
+                if obrazek == "":
+                    obrazek = "NULL"
+                if flasksqlalchemy:
+                    ...
+                else:
+                    ...
+                return redirect(url_for("forum"))
+            return catchall(path)
+    else:
+        return redirect(url_for("index"))
+    
+
 @flaskApp.route('/<path:path>', methods=["POST"])
 @flaskApp.route('/', defaults={'path': ''}, methods=["POST"])
 def catchall(path):
@@ -381,8 +404,7 @@ def catchall(path):
             else:
                 flasksqlalchemy = True
                 session["engine"] = "flask-sqlalchemy"
-                
-            return redirect(url_for("index"))
+            return redirect(request.referrer)
 
 if __name__ == "__main__":
     flaskApp.run(debug=True, host="0.0.0.0")

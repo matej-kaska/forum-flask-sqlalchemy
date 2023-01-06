@@ -54,6 +54,19 @@ h2 {
     letter-spacing: 7px;
 }
 
+textarea[type="text"] {
+    background-color: #333333;
+    color: white
+}
+textarea:focus { 
+    background-color: #333333;
+}
+.form-control:focus {
+    background-color: #333333;
+    color: white
+
+}
+
 input[type="text"] {
     background-color: #333333;
     color: white;
