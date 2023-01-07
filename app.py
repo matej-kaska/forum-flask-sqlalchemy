@@ -284,7 +284,7 @@ def prispevek(id):
                 prispevek = pris
         hodnoceni = hodnoceniList(id)
         if flasksqlalchemy:
-            prispevek, komentare, odpovedi, obrazky, userHodnoceni, hodnoceniavg = prispevekData(postgre.session.query(Komentare.id, Komentare.text, Uzivatele.prezdivka).outerjoin(Uzivatele).filter(Komentare.prispevek_id==id).all(),postgre.session.query(Prispevky.obrazek).filter(Prispevky.id==id).all(), postgre.session.query(Prispevky.id, Prispevky.obsah, Prispevky.nazev, Uzivatele.prezdivka, func.avg(Hodnoceni.hodnoceni)).select_from(Prispevky).join(Uzivatele).join(Hodnoceni).filter(Prispevky.id== id).group_by(Prispevky.id, Uzivatele.prezdivka), id, session["userid"])
+            prispevek, komentare, odpovedi, obrazky, userHodnoceni, hodnoceniavg = prispevekData(postgre.session.query(Komentare.id, Komentare.text, Uzivatele.prezdivka).outerjoin(Uzivatele).filter(Komentare.prispevek_id==id).all(),postgre.session.query(Prispevky.obrazek).filter(Prispevky.id==id).all(), postgre.session.query(Prispevky.id, Prispevky.obsah, Prispevky.nazev, Uzivatele.prezdivka, func.avg(Hodnoceni.hodnoceni)).select_from(Prispevky).join(Uzivatele).outerjoin(Hodnoceni, Prispevky.id==Hodnoceni.prispevek_id).filter(Prispevky.id== id).group_by(Prispevky.id, Uzivatele.prezdivka), id, session["userid"])
             print("flasksqlalchemy")
         else:
             prispevek, komentare, odpovedi, obrazky, userHodnoceni, hodnoceniavg = prispevekData(postgreSQL.execute("SELECT k.id, k.text, u.prezdivka FROM komentare AS k LEFT JOIN uzivatele AS u ON u.id = k.uzivatel_id WHERE k.prispevek_id = '{0}'".format(id)).fetchall(),postgreSQL.execute("SELECT obrazek FROM prispevky WHERE id = {0}".format(id)),postgreSQL.execute("SELECT p.id, p.obsah, p.nazev, u.prezdivka, AVG(h.hodnoceni) FROM prispevky AS p LEFT OUTER JOIN uzivatele AS u ON u.id = p.uzivatel_id LEFT JOIN hodnoceni AS h ON h.prispevek_id = p.id WHERE p.id = '{0}' GROUP BY p.id, u.prezdivka".format(id)), id, session["userid"])
@@ -344,7 +344,7 @@ def prispevek(id):
                     prispevek = pris
             hodnoceni = hodnoceniList(id)
             if flasksqlalchemy:
-                prispevek, komentare, odpovedi, obrazky, userHodnoceni, hodnoceniavg = prispevekData(postgre.session.query(Komentare.id, Komentare.text, Uzivatele.prezdivka).outerjoin(Uzivatele).filter(Komentare.prispevek_id==id).all(),postgre.session.query(Prispevky.obrazek).filter(Prispevky.id==id).all(), postgre.session.query(Prispevky.id, Prispevky.obsah, Prispevky.nazev, Uzivatele.prezdivka, func.avg(Hodnoceni.hodnoceni)).select_from(Prispevky).join(Uzivatele).join(Hodnoceni).filter(Prispevky.id== id).group_by(Prispevky.id, Uzivatele.prezdivka), id, session["userid"])
+                prispevek, komentare, odpovedi, obrazky, userHodnoceni, hodnoceniavg = prispevekData(postgre.session.query(Komentare.id, Komentare.text, Uzivatele.prezdivka).outerjoin(Uzivatele).filter(Komentare.prispevek_id==id).all(),postgre.session.query(Prispevky.obrazek).filter(Prispevky.id==id).all(), postgre.session.query(Prispevky.id, Prispevky.obsah, Prispevky.nazev, Uzivatele.prezdivka, func.avg(Hodnoceni.hodnoceni)).select_from(Prispevky).join(Uzivatele).outerjoin(Hodnoceni, Prispevky.id==Hodnoceni.prispevek_id).filter(Prispevky.id== id).group_by(Prispevky.id, Uzivatele.prezdivka), id, session["userid"])
             else:
                 prispevek, komentare, odpovedi, obrazky, userHodnoceni, hodnoceniavg = prispevekData(postgreSQL.execute("SELECT k.id, k.text, u.prezdivka FROM komentare AS k LEFT JOIN uzivatele AS u ON u.id = k.uzivatel_id WHERE k.prispevek_id = '{0}'".format(id)).fetchall(),postgreSQL.execute("SELECT obrazek FROM prispevky WHERE id = {0}".format(id)),postgreSQL.execute("SELECT p.id, p.obsah, p.nazev, u.prezdivka, AVG(h.hodnoceni) FROM prispevky AS p LEFT OUTER JOIN uzivatele AS u ON u.id = p.uzivatel_id LEFT JOIN hodnoceni AS h ON h.prispevek_id = p.id WHERE p.id = '{0}' GROUP BY p.id, u.prezdivka".format(id)), id, session["userid"])
             if request.form["btn"] != "logout":
@@ -466,6 +466,7 @@ def new():
                 obrazek = request.form.get("obrazek")
                 if obrazek == "":
                     obrazek = "NULL"
+                # ---> flask-sqlalchemy <---
                 if flasksqlalchemy:
                     prispevek = Prispevky(
                         nazev = nazev,
@@ -475,6 +476,7 @@ def new():
                     )
                     postgre.session.add(prispevek)
                     postgre.session.commit()
+                # ---> sqlalchemy <---
                 else:
                     postgreSQL.execute("INSERT INTO prispevky (nazev, obsah, obrazek, uzivatel_id) VALUES ('{0}', '{1}', '{2}', '{3}')".format(nazev, obsah, obrazek, session["userid"]))
                 return redirect(url_for("forum"))
