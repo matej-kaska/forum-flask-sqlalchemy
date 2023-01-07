@@ -74,7 +74,9 @@ def prispevekData(komentareQuery, obrazkyQuery, id, userid):
     if flasksqlalchemy:
         userHodnoceni = postgre.session.query(Hodnoceni.hodnoceni).join(Prispevky).filter(Hodnoceni.uzivatel_id==userid).filter(Prispevky.id==id).scalar()
     else:
-        userHodnoceni = str(postgreSQL.execute("SELECT h.hodnoceni FROM hodnoceni AS h LEFT JOIN uzivatele AS u ON u.id = h.uzivatel_id LEFT JOIN prispevky AS p ON p.id = h.prispevek_id WHERE h.uzivatel_id = '{0}' AND p.id = '{1}'".format(userid, id)).fetchone()[0])
+        userHodnoceni = str(postgreSQL.execute("SELECT h.hodnoceni FROM hodnoceni AS h LEFT JOIN uzivatele AS u ON u.id = h.uzivatel_id LEFT JOIN prispevky AS p ON p.id = h.prispevek_id WHERE h.uzivatel_id = '{0}' AND p.id = '{1}'".format(userid, id)).fetchone())
+        if userHodnoceni:
+            userHodnoceni = userHodnoceni[10:11]
     if flasksqlalchemy:
         hodnoceniavg = postgre.session.query(func.avg(Hodnoceni.hodnoceni)).join(Prispevky).filter(Prispevky.id==id).scalar()
     else:
@@ -281,7 +283,7 @@ def prispevek(id):
         if request.method == "POST":
             if request.form["btn"] == "ohodnotit":
                 hodnoceni = request.form.get("hodnoceniselect")
-                if postgreSQL.execute("SELECT id FROM hodnoceni WHERE uzivatel_id = '{0}' AND prispevek_id = '{1}'".format(session["userid"], id)).fetchone()[0] is None:
+                if postgreSQL.execute("SELECT id FROM hodnoceni WHERE uzivatel_id = '{0}' AND prispevek_id = '{1}'".format(session["userid"], id)).fetchone() is None:
                     if flasksqlalchemy:
                         hodnota = Hodnoceni (
                             hodnoceni = hodnoceni,
