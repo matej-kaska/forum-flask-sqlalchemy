@@ -5,13 +5,28 @@
   </header>
 </article>
 
+<form method="post">
 <section class="section position-center" id="Text" style="padding-left: 5%; padding-right: 5%">
   <table class="table table-hover table-bordered bdr">
     <tr>
       <thead>
-      <th>Příspěvek</th>
-      <th style="width: 20%">Autor: {{ prispevek[2] }}</th>
-      <th data-html="true" style="width: 14%" title="{{ hodnoceni }}">Hodnocení: {{ prispevek[3] }}</th>
+      <th>{{ prispevek[2] }}</th>
+      <th style="width: 20%">Autor: {{ prispevek[3] }}</th>
+      <th data-html="true" style="width: 18%;text-align: center; vertical-align: middle;" title="{{ hodnoceni }}"><select class="form-select" name="hodnoceniselect" aria-label="Vyberte uživatele" style="margin-right: 1%; margin-left:1%;text-align: center; vertical-align: middle;">
+        {% for i in range(1,6) %}
+        {% if userHodnoceni|string == i|string %}
+        <option selected value="{{ i }}">{{ i }}</option>
+        {% else %}
+        <option value="{{ i }}">{{ i }}</option>
+        {% endif %}
+        {% endfor %}
+    </select><button style="margin-left: 2%; margin-right: 2%;" type="submit" name="btn" value="ohodnotit" class="btn btn-primary btn-sm">Ohodnotit</button>Hodnocení: 
+    {% if hodnoceniavg == null %}
+    {{ prispevek[4] }}
+    {% else %}
+    {{ hodnoceniavg }}
+    {% endif %}
+    </th>
       </thead>
     </tr>
     <tr>
@@ -50,4 +65,5 @@
   </table>
   {% endif %}
 </section>
+</form>
 {% endblock %}

@@ -12,15 +12,15 @@
       <th scope="row" style="text-align: center; vertical-align: middle;">Příspěvek
         <a type="button" href="/forum/new" style="text-align: center; vertical-align: middle;overflow: hidden;border: none;white-space: nowrap;padding: 0px;position: sticky;left: 99%;" class="btn btn-link"><span style=" font-size:26px;" class="bi bi-plus-square"></span></a>
       </th>
-      <th style="text-align: center; vertical-align: middle;">Autor</th>
-      <th style="text-align: center; vertical-align: middle;">Hodnocení</th>
+      <th style="width: 15%; text-align: center; vertical-align: middle;">Autor</th>
+      <th style="width: 5%; text-align: center; vertical-align: middle;">Hodnocení</th>
       </thead>
     </tr>
     {% for prispevek in data %}
     <tr>
-      <td><a style="color: white;" href= forum/{{ prispevek[0] }}>{{ prispevek[1][0:110] }}...</a></td>
-      <td>{{ prispevek[2] }}</td>
+      <td><a style="color: white;" href= forum/{{ prispevek[0] }}>{{ prispevek[2] }}</a></td>
       <td>{{ prispevek[3] }}</td>
+      <td>{{ prispevek[4] }}</td>
     </tr>
     {% endfor %}
   </table>

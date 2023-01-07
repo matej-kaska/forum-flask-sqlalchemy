@@ -42,12 +42,13 @@ def queryToList(query):
             finalList.append(dat)
     return finalList
 
-def prispevekData(komentareQuery, obrazkyQuery):
+def prispevekData(komentareQuery, obrazkyQuery, id, userid):
     komentare = []
     odpovedi = []
     obrazky = []
     komentareIDs = []
     rawOdpovedi = []
+    userHodnoceni = ""
     rawKomentare = komentareQuery
     for komentar in rawKomentare:
         comm = []
@@ -70,7 +71,16 @@ def prispevekData(komentareQuery, obrazkyQuery):
     for obrazek in rawObrazky:
         for obraz in obrazek:
             obrazky.append(obraz)
-    return komentare, odpovedi, obrazky
+    if flasksqlalchemy:
+        userHodnoceni = postgre.session.query(Hodnoceni.hodnoceni).join(Prispevky).filter(Hodnoceni.uzivatel_id==userid).filter(Prispevky.id==id).scalar()
+    else:
+        userHodnoceni = str(postgreSQL.execute("SELECT h.hodnoceni FROM hodnoceni AS h LEFT JOIN uzivatele AS u ON u.id = h.uzivatel_id LEFT JOIN prispevky AS p ON p.id = h.prispevek_id WHERE h.uzivatel_id = '{0}' AND p.id = '{1}'".format(userid, id)).fetchone()[0])
+    if flasksqlalchemy:
+        hodnoceniavg = postgre.session.query(func.avg(Hodnoceni.hodnoceni)).join(Prispevky).filter(Prispevky.id==id).scalar()
+    else:
+        hodnoceniavg = str(postgreSQL.execute("SELECT AVG(h.hodnoceni) FROM prispevky AS p LEFT JOIN hodnoceni AS h ON h.prispevek_id = p.id WHERE p.id = {0}".format(id)).fetchone()[0])
+    hodnoceniavg = str(hodnoceniavg)[0:3]
+    return komentare, odpovedi, obrazky, userHodnoceni, hodnoceniavg
 
 def role(session):
     username = session.get("username")
@@ -145,7 +155,9 @@ def register():
                 else:
                     id = postgreSQL.execute("SELECT id FROM uzivatele WHERE prezdivka = '{0}'".format(username)).fetchone()
                     postgreSQL.execute("INSERT INTO uzivatele_role (role_id, uzivatel_id) VALUES ('1', '{0}')".format(id[0]))
+                id =  postgreSQL.execute("SELECT id FROM uzivatele WHERE prezdivka = '{0}'".format(username)).fetchone()[0]
                 session["username"] = request.form["username"]
+                session["userid"] = id
                 session["engineUser"] = "postgres"
                 session["enginePass"] = "123"
                 session["roleuser"] = ""
@@ -167,25 +179,28 @@ def forum():
                 prispevek = []
                 nextdata = []
                 i=0
-                rawdata = postgre.session.query(Prispevky.id, Prispevky.obsah, Uzivatele.prezdivka).outerjoin(Uzivatele).all()
+                rawdata = postgre.session.query(Prispevky.id, Prispevky.obsah, Prispevky.nazev, Uzivatele.prezdivka).outerjoin(Uzivatele).order_by(Prispevky.id).all()
                 for prispevky in rawdata:
                     prispevek = []
                     for smalldata in prispevky:
                         prispevek.append(smalldata)
                     data.append(prispevek)
-                nextdata = postgre.session.query(func.avg(Hodnoceni.hodnoceni)).join(Prispevky).group_by(Prispevky.id).all()
+                nextdata = postgre.session.query(func.avg(Hodnoceni.hodnoceni)).join(Prispevky).group_by(Prispevky.id).order_by(Prispevky.id).all()
                 for item in nextdata:
                     item = str(item)[10:13]
                     data[i].append(item)
                     i = i+1
             else:
-                rawdata = postgreSQL.execute("SELECT p.id, p.obsah, u.prezdivka, AVG(h.hodnoceni) FROM prispevky AS p LEFT OUTER JOIN uzivatele AS u ON u.id = p.uzivatel_id LEFT JOIN hodnoceni AS h ON h.prispevek_id = p.id GROUP BY p.id, u.prezdivka").fetchall()
+                rawdata = postgreSQL.execute("SELECT p.id, p.obsah, p.nazev, u.prezdivka, AVG(h.hodnoceni) FROM prispevky AS p LEFT OUTER JOIN uzivatele AS u ON u.id = p.uzivatel_id LEFT JOIN hodnoceni AS h ON h.prispevek_id = p.id GROUP BY p.id, u.prezdivka ORDER BY p.id").fetchall()
                 prispevekid = 0
                 for prispevek in range(0, int(len(rawdata))):
                     prispevek = []
-                    for i in range(0,4):
-                        if i == 3:
-                            prispevek.append(str(rawdata[prispevekid][i])[0:3])
+                    for i in range(0,5):
+                        if i == 4:
+                            if str(rawdata[prispevekid][i]) == "None":
+                                prispevek.append("")
+                            else:
+                                prispevek.append(str(rawdata[prispevekid][i])[0:3])
                         else:
                             prispevek.append(rawdata[prispevekid][i])
                         i = i + 1
@@ -248,21 +263,53 @@ def index():
             return catchall(path)
     return render_template("index.html", session=session, role=role(session))
 
-@flaskApp.route("/forum/<id>", methods=["GET"])
+@flaskApp.route("/forum/<id>", methods=["GET", "POST"])
 def prispevek(id):
     if session.get("username"):
-        if request.method == "GET":
-            for pris in data:
+        for pris in data:
                 if str(pris[0]) == id:
                     prispevek = pris
+        hodnoceni = hodnoceniList(id)
+        if flasksqlalchemy:
+            komentare, odpovedi, obrazky, userHodnoceni, hodnoceniavg = prispevekData(postgre.session.query(Komentare.id, Komentare.text, Uzivatele.prezdivka).outerjoin(Uzivatele).filter(Komentare.prispevek_id==id).all(),postgre.session.query(Prispevky.obrazek).filter(Prispevky.id==id).all(), prispevek[0], session["userid"])
+            print("flasksqlalchemy")
+        else:
+            komentare, odpovedi, obrazky, userHodnoceni, hodnoceniavg = prispevekData(postgreSQL.execute("SELECT k.id, k.text, u.prezdivka FROM komentare AS k LEFT JOIN uzivatele AS u ON u.id = k.uzivatel_id WHERE k.prispevek_id = '{0}'".format(id)).fetchall(),postgreSQL.execute("SELECT obrazek FROM prispevky WHERE id = {0}".format(id)), prispevek[0], session["userid"])
+            print("sqlalchemy")
+        if request.method == "GET":
+            return render_template("prispevek.html", session=session, role=role(session), prispevek=prispevek, hodnoceni=hodnoceni, komentare=komentare, odpovedi=odpovedi, obrazky=obrazky, userHodnoceni=userHodnoceni)
+        if request.method == "POST":
+            if request.form["btn"] == "ohodnotit":
+                hodnoceni = request.form.get("hodnoceniselect")
+                if postgreSQL.execute("SELECT id FROM hodnoceni WHERE uzivatel_id = '{0}' AND prispevek_id = '{1}'".format(session["userid"], id)).fetchone()[0] is None:
+                    if flasksqlalchemy:
+                        hodnota = Hodnoceni (
+                            hodnoceni = hodnoceni,
+                            uzivatel_id = session["userid"],
+                            prispevek_id = id
+                        )
+                        postgre.session.add(hodnota)
+                        postgre.session.commit()
+                    else:
+                        postgreSQL.execute("INSERT INTO hodnoceni (hodnoceni, uzivatel_id, prispevek_id) VALUES ('{0}', '{1}', '{2}')".format(hodnoceni, session["userid"], id))
+                else:
+                    if flasksqlalchemy:
+                        hodnota = Hodnoceni.query.filter_by(prispevek_id = id).filter_by(uzivatel_id = session["userid"]).first()
+                        hodnota.hodnoceni = hodnoceni
+                        postgre.session.commit()
+                    else:
+                        postgreSQL.execute("UPDATE hodnoceni SET hodnoceni = '{0}' WHERE uzivatel_id = '{1}' AND prispevek_id = '{2}'".format(hodnoceni, session["userid"], id))
+            for pris in data:
+                    if str(pris[0]) == id:
+                        prispevek = pris
             hodnoceni = hodnoceniList(id)
             if flasksqlalchemy:
-                komentare, odpovedi, obrazky = prispevekData(postgre.session.query(Komentare.id, Komentare.text, Uzivatele.prezdivka).outerjoin(Uzivatele).filter(Komentare.prispevek_id==id).all(),postgre.session.query(Prispevky.obrazek).filter(Prispevky.id==id).all())
-                print("flasksqlalchemy")
+                komentare, odpovedi, obrazky, userHodnoceni, hodnoceniavg = prispevekData(postgre.session.query(Komentare.id, Komentare.text, Uzivatele.prezdivka).outerjoin(Uzivatele).filter(Komentare.prispevek_id==id).all(),postgre.session.query(Prispevky.obrazek).filter(Prispevky.id==id).all(), prispevek[0], session["userid"])
             else:
-                komentare, odpovedi, obrazky = prispevekData(postgreSQL.execute("SELECT k.id, k.text, u.prezdivka FROM komentare AS k LEFT JOIN uzivatele AS u ON u.id = k.uzivatel_id WHERE k.prispevek_id = '{0}'".format(id)).fetchall(),postgreSQL.execute("SELECT obrazek FROM prispevky WHERE id = {0}".format(id)))
-                print("sqlalchemy")
-            return render_template("prispevek.html", session=session, role=role(session), prispevek=prispevek, hodnoceni=hodnoceni, komentare=komentare, odpovedi=odpovedi, obrazky=obrazky)
+                komentare, odpovedi, obrazky, userHodnoceni, hodnoceniavg = prispevekData(postgreSQL.execute("SELECT k.id, k.text, u.prezdivka FROM komentare AS k LEFT JOIN uzivatele AS u ON u.id = k.uzivatel_id WHERE k.prispevek_id = '{0}'".format(id)).fetchall(),postgreSQL.execute("SELECT obrazek FROM prispevky WHERE id = {0}".format(id)), prispevek[0], session["userid"])
+            if request.form["btn"] != "logout":
+                if request.form["btn"] != "flask":
+                    return render_template("prispevek.html", session=session, role=role(session), prispevek=prispevek, hodnoceni=hodnoceni, komentare=komentare, odpovedi=odpovedi, obrazky=obrazky, userHodnoceni=userHodnoceni, hodnoceniavg=hodnoceniavg)
         return catchall(path)
     else:
         return redirect(url_for("index"))
@@ -361,7 +408,8 @@ def sql():
             privofuser = queryToList(showGrant(session["privuser"], session["engineUser"], session["enginePass"]))
             tabulkydata = queryToList(lockTable(session["selectedtabulka"], session["engineUser"], session["enginePass"]))
             if request.form["btn"] != "logout":
-                return render_template("sql.html", session=session, role=role(session), users=finalusers, uzivatele=uzivatele, roles=roles, rolesofuser=rolesofuser, roleuser=session["roleuser"], privofuser=privofuser, privuser=session["privuser"], selectedtabulka=session["selectedtabulka"], tabulky=tabulky, tabulkydata=tabulkydata, engineUser=session["engineUser"])
+                if request.form["btn"] != "flask":
+                    return render_template("sql.html", session=session, role=role(session), users=finalusers, uzivatele=uzivatele, roles=roles, rolesofuser=rolesofuser, roleuser=session["roleuser"], privofuser=privofuser, privuser=session["privuser"], selectedtabulka=session["selectedtabulka"], tabulky=tabulky, tabulkydata=tabulkydata, engineUser=session["engineUser"])
         return catchall(path)
     else:
         return redirect(url_for("index"))
@@ -379,9 +427,16 @@ def new():
                 if obrazek == "":
                     obrazek = "NULL"
                 if flasksqlalchemy:
-                    ...
+                    prispevek = Prispevky(
+                        nazev = nazev,
+                        obsah = obsah,
+                        obrazek = obrazek,
+                        uzivatel_id = session["userid"]
+                    )
+                    postgre.session.add(prispevek)
+                    postgre.session.commit()
                 else:
-                    ...
+                    postgreSQL.execute("INSERT INTO prispevky (nazev, obsah, obrazek, uzivatel_id) VALUES ('{0}', '{1}', '{2}', '{3}')".format(nazev, obsah, obrazek, session["userid"]))
                 return redirect(url_for("forum"))
             return catchall(path)
     else:
