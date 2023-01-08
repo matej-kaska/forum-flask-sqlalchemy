@@ -75,10 +75,10 @@ def prispevekData(komentareQuery, prispevekQuery, userhodnoceniQuery, id):
         # ===> Získání odpovědí u komentářů <===
         # ---> flask-sqlalchemy <---
         if flasksqlalchemy:
-            rawOdpovedi.append(postgre.session.query(Odpovedi.komentar_id, Odpovedi.text, Uzivatele.prezdivka).outerjoin(Uzivatele).filter(Odpovedi.komentar_id==odpoved).all())
+            rawOdpovedi.append(postgre.session.query(Odpovedi.komentar_id, Odpovedi.text, Uzivatele.prezdivka, Odpovedi.id).outerjoin(Uzivatele).filter(Odpovedi.komentar_id==odpoved).all())
         # ---> sqlalchemy <---
         else:
-            rawOdpovedi.append(postgreSQL.execute("SELECT o.komentar_id, o.text, u.prezdivka FROM odpovedi AS o LEFT JOIN komentare AS k ON o.komentar_id = k.id LEFT JOIN uzivatele AS u ON u.id = o.uzivatel_id WHERE k.id='{0}'".format(odpoved)))
+            rawOdpovedi.append(postgreSQL.execute("SELECT o.komentar_id, o.text, u.prezdivka, o.id FROM odpovedi AS o LEFT JOIN komentare AS k ON o.komentar_id = k.id LEFT JOIN uzivatele AS u ON u.id = o.uzivatel_id WHERE k.id='{0}'".format(odpoved)))
     for rawOdpoved in rawOdpovedi:
         odpoved = queryPrispevekToList(rawOdpoved, False)
         if odpoved != []:
@@ -333,6 +333,49 @@ def prispevek(id):
                     # ---> sqlalchemy <--
                     else:
                         postgreSQL.execute("INSERT INTO odpovedi (text, uzivatel_id, komentar_id) VALUES ('{0}', '{1}', '{2}')".format(odpovedtext, session["userid"], komentarid))
+            if role(session) != "uživatel": 
+                if request.form["btn"] == "removePrispevek":
+                    if role(session) != "moderátor":
+                        # ===> Odstranění příspěvku, komentářů, odpovědí a hodnocení <===
+                        # ---> flask-sqlalchemy <--
+                        if flasksqlalchemy:
+                            odpovedi = Odpovedi.query.outerjoin(Komentare).outerjoin(Prispevky, Komentare.prispevek_id==Prispevky.id).filter(Prispevky.id == id).all()
+                            for odpoved in odpovedi:
+                                postgre.session.delete(odpoved)
+                                postgre.session.commit()
+                            Hodnoceni.query.filter(Hodnoceni.prispevek_id == id).delete()
+                            Komentare.query.filter(Komentare.prispevek_id == id).delete()
+                            Prispevky.query.filter(Prispevky.id == id).delete()
+                            postgre.session.commit()
+                        # ---> sqlalchemy <--
+                        else:
+                            postgreSQL.execute("DELETE FROM hodnoceni WHERE prispevek_id = {0};".format(id))
+                            postgreSQL.execute("DELETE FROM odpovedi AS o USING komentare AS k, prispevky AS p WHERE o.komentar_id = k.id AND k.prispevek_id = p.id AND p.id = {0}".format(id))
+                            postgreSQL.execute("DELETE FROM komentare WHERE prispevek_id = {0};".format(id))
+                            postgreSQL.execute("DELETE FROM prispevky WHERE id = {0};".format(id))
+                        return redirect(url_for("forum"))
+                elif request.form["btn"][0:14] == "removeKomentar":
+                    komentarid = request.form["btn"][14:]
+                    # ===> Odstranění komentářů a odpovědí <===
+                    # ---> flask-sqlalchemy <--
+                    if flasksqlalchemy:
+                        Odpovedi.query.filter(Odpovedi.komentar_id == komentarid).delete()
+                        Komentare.query.filter(Komentare.id == komentarid).delete()
+                        postgre.session.commit()
+                    # ---> sqlalchemy <--
+                    else:
+                        postgreSQL.execute("DELETE FROM odpovedi WHERE komentar_id = {0};".format(komentarid))
+                        postgreSQL.execute("DELETE FROM komentare WHERE id = {0};".format(komentarid))
+                elif request.form["btn"][0:13] == "removeOdpoved":
+                    odpovedid = request.form["btn"][13:]
+                    # ===> Odstranění odpovědí <===
+                    # ---> flask-sqlalchemy <--
+                    if flasksqlalchemy:
+                        Odpovedi.query.filter(Odpovedi.id == odpovedid).delete()
+                        postgre.session.commit()
+                    # ---> sqlalchemy <--
+                    else:
+                        postgreSQL.execute("DELETE FROM odpovedi WHERE id = {0};".format(odpovedid))
         for pris in data:
             if str(pris[0]) == id:
                 prispevek = pris
