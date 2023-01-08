@@ -10,8 +10,8 @@
   <table class="table table-hover table-bordered bdr">
     <tr>
       <thead>
-      <th>{{ prispevek[2] }}</th>
-      <th style="width: 20%">Autor: {{ prispevek[3] }}</th>
+      <th>{{ prispevek[0][2] }}</th>
+      <th style="width: 20%">Autor: {{ prispevek[0][3] }}</th>
       <th data-html="true" style="width: 18%;text-align: center; vertical-align: middle;" title="{{ hodnoceni }}"><select class="form-select" name="hodnoceniselect" aria-label="Vyberte uživatele" style="margin-right: 1%; margin-left:1%;text-align: center; vertical-align: middle;">
         {% for i in range(1,6) %}
         {% if userHodnoceni|string == i|string %}
@@ -21,22 +21,16 @@
         {% endif %}
         {% endfor %}
     </select><button style="margin-left: 2%; margin-right: 2%;" type="submit" name="btn" value="ohodnotit" class="btn btn-primary btn-sm">Ohodnotit</button>Hodnocení: 
-    {% if hodnoceniavg == null %}
-    {{ (prispevek[4]|string)[0:3] }}
-    {% else %}
-    {{ hodnoceniavg }}
-    {% endif %}
+    {{ (prispevek[0][4]|string)[0:3] }}
     </th>
       </thead>
     </tr>
     <tr>
-      {% if obrazky[0] == "NULL" %}
-      <td colspan="3">{{ prispevek[1] }}</td>
+      {% if prispevek[0][5] == "NULL" %}
+      <td colspan="3">{{ prispevek[0][1] }}</td>
       {% else %}
-      <td colspan="2">{{ prispevek[1] }}</td>
-      {% for obrazek in obrazky %}
-      <td ><img src="{{ obrazek }}" width="256"></td>
-      {% endfor %}
+      <td colspan="2">{{ prispevek[0][1] }}</td>
+      <td ><img src="{{ prispevek[0][5] }}" width="256"></td>
       {% endif %}
     </tr>
   </table>
