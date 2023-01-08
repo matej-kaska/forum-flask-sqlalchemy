@@ -67,7 +67,10 @@ def prispevekData(komentareQuery, prispevekQuery, userhodnoceniQuery, id):
     if userhodnoceniQuery == None:
         userHodnoceni = "1"
     else:
-        userHodnoceni = str(int(userhodnoceniQuery))
+        try:
+            userHodnoceni = str(int(userhodnoceniQuery))
+        except:
+            userHodnoceni = str(int(userhodnoceniQuery[0]))
     for odpoved in komentareIDs:
         # ===> Získání odpovědí u komentářů <===
         # ---> flask-sqlalchemy <---
@@ -346,7 +349,7 @@ def prispevek(id):
         else:
             komentareQuery = postgreSQL.execute("SELECT k.id, k.text, u.prezdivka FROM komentare AS k LEFT JOIN uzivatele AS u ON u.id = k.uzivatel_id WHERE k.prispevek_id = '{0}'".format(id)).fetchall()
             prispevekQuery = postgreSQL.execute("SELECT p.id, p.obsah, p.nazev, u.prezdivka, AVG(h.hodnoceni), p.obrazek FROM prispevky AS p LEFT OUTER JOIN uzivatele AS u ON u.id = p.uzivatel_id LEFT JOIN hodnoceni AS h ON h.prispevek_id = p.id WHERE p.id = '{0}' GROUP BY p.id, u.prezdivka".format(id))
-            userHodnoceniQuery = postgreSQL.execute("SELECT h.hodnoceni FROM hodnoceni AS h LEFT JOIN uzivatele AS u ON u.id = h.uzivatel_id LEFT JOIN prispevky AS p ON p.id = h.prispevek_id WHERE h.uzivatel_id = '{0}' AND p.id = '{1}'".format(session["userid"], id)).first()[0]
+            userHodnoceniQuery = postgreSQL.execute("SELECT h.hodnoceni FROM hodnoceni AS h LEFT JOIN uzivatele AS u ON u.id = h.uzivatel_id LEFT JOIN prispevky AS p ON p.id = h.prispevek_id WHERE h.uzivatel_id = '{0}' AND p.id = '{1}'".format(session["userid"], id)).first()
             prispevek, komentare, odpovedi, userHodnoceni = prispevekData(komentareQuery, prispevekQuery, userHodnoceniQuery, id)
             print("sqlalchemy")
         if request.method == "GET":
