@@ -20,7 +20,7 @@
         <button type="submit" value="removePrispevek" name="btn" style="text-align: center; vertical-align: middle;overflow: hidden;border: none;white-space: nowrap;padding: 0px;position: sticky;left: 98%;" class="btn btn-link"><span  id="boot-icon" class="bi bi-dash-square" style="font-size: 24px; color: rgb(2, 117, 216);"></span></button>
         {% endif %}
       </th>
-      <th style="width: 20%">Autor: {{ prispevek[0][3] }}</th>
+      <th style="width: 20%;text-align: center; vertical-align: middle;">Autor: {{ prispevek[0][3] }}</th>
       <th data-html="true" style="width: 18%;text-align: center; vertical-align: middle;" title="{{ hodnoceni }}"><select class="form-select" name="hodnoceniselect" aria-label="Vyberte uživatele" style="margin-right: 1%; margin-left:1%;text-align: center; vertical-align: middle;">
         {% for i in range(1,6) %}
         {% if userHodnoceni|string == i|string %}
