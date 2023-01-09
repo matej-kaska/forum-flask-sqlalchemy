@@ -14,7 +14,7 @@ flasksqlalchemy = True
 flaskApp = Flask(__name__)
 flaskApp.app_context().push()
 flaskApp.secret_key = "16ecab1875791e2b6ed0c9a6dae5a12a79d92120e1c3afbd3a9c8535ce44660d"
-flaskApp.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:123@localhost:5432/forumbackup"
+flaskApp.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:123@localhost:5432/forum"
 #flaskApp.config['SQLALCHEMY_ECHO'] = True
 
 #sql administration commands
@@ -93,7 +93,7 @@ def role(session):
         # ===> Získání role uživatele <===
         # ---> flask-sqlalchemy <---
         if flasksqlalchemy:
-            list = postgre.session.query(Role.id).join(Uzivatele, Role.roles).filter(Uzivatele.prezdivka==username).all()
+            list = postgre.session.query(Role.id).join(Uzivatele.role).filter(Uzivatele.prezdivka==username).all()
         # ---> sqlalchemy <---
         else:
             list = postgreSQL.execute("SELECT r.id FROM role AS r LEFT JOIN uzivatele_role AS ur ON r.id = ur.role_id LEFT JOIN uzivatele AS u ON ur.uzivatel_id = u.id WHERE u.prezdivka = '{0}'".format(username))
@@ -186,7 +186,9 @@ def register():
                 return redirect(url_for("forum"))
             else:
                 flash("regerror")
-                return redirect(request.referrer)  
+                return redirect(request.referrer) 
+        elif request.form["btn"] == "flask":
+            return catchall(path)
         return render_template("register.html", session=session, role=role(session))
 
 @flaskApp.route("/", methods=["GET", "POST"])
@@ -597,8 +599,67 @@ def rolesWeb():
         return redirect(url_for("index"))
 
 @flaskApp.route("/forum/account", methods=["GET", "POST"])
-def account(): #smazat účet + příspěvky + hodnocení + komentáře + odpovědi
-    ...
+def account():
+    if session.get("username"):
+        if request.method == "POST":
+            if request.form["btn"] == "changeDetails":
+                changedEmail = request.form.get("changeEmailinput")
+                changedPassword = request.form.get("changePasswordinput")
+                if flasksqlalchemy:
+                    if changedEmail != "":
+                        if changedEmail not in queryToList(postgre.session.query(Uzivatele.email).all()):
+                            email = Uzivatele.query.filter_by(id = session["userid"]).first()
+                            email.email = changedEmail
+                            postgre.session.commit()
+                        else:
+                            flash("changeerror")
+                    if changedPassword != "":
+                        hashed_pass = hashlib.sha256(changedPassword.encode("utf-8")).hexdigest()
+                        heslo = Uzivatele.query.filter_by(id = session["userid"]).first()
+                        heslo.heslo = hashed_pass
+                        postgre.session.commit()
+                else:
+                    if changedEmail != "":
+                        if changedEmail not in queryToList(postgreSQL.execute("SELECT email FROM uzivatele").fetchall()):
+                            postgreSQL.execute("UPDATE uzivatele SET email = '{0}' WHERE id = '{1}'".format(changedEmail, session["userid"]))
+                        else:
+                            flash("changeerror")
+                    if changedPassword != "":
+                        hashed_pass = hashlib.sha256(changedPassword.encode("utf-8")).hexdigest()
+                        postgreSQL.execute("UPDATE uzivatele SET heslo = '{0}' WHERE id = '{1}'".format(hashed_pass, session["userid"]))
+            if request.form["btn"] == "deleteAccount":
+                if flasksqlalchemy:
+                    deletedRoles = postgre.session.query(Uzivatele).get(session["userid"])
+                    deletedRoles.role = []     
+                    postgre.session.commit()
+                    Hodnoceni.query.filter(Hodnoceni.uzivatel_id == session["userid"]).delete()
+                    Odpovedi.query.filter(Odpovedi.uzivatel_id == session["userid"]).delete()
+                    Komentare.query.filter(Komentare.uzivatel_id == session["userid"]).delete()
+                    Prispevky.query.filter(Prispevky.uzivatel_id == session["userid"]).delete()
+                    Uzivatele.query.filter(Uzivatele.id == session["userid"]).delete()
+                    postgre.session.commit()
+                else:
+                    postgreSQL.execute("DELETE FROM hodnoceni WHERE uzivatel_id = {0};".format(session["userid"]))
+                    postgreSQL.execute("DELETE FROM odpovedi WHERE uzivatel_id = {0};".format(session["userid"]))
+                    postgreSQL.execute("DELETE FROM komentare WHERE uzivatel_id = {0};".format(session["userid"]))
+                    postgreSQL.execute("DELETE FROM prispevky WHERE uzivatel_id = {0};".format(session["userid"]))
+                    postgreSQL.execute("DELETE FROM uzivatele_role WHERE uzivatel_id = {0};".format(session["userid"]))
+                    postgreSQL.execute("DELETE FROM uzivatele WHERE id = {0};".format(session["userid"]))
+                session.pop("username")
+                flash("logout")
+                return redirect(url_for("index"))
+        if flasksqlalchemy:
+            user = postgre.session.query(Uzivatele.prezdivka, Uzivatele.email, Uzivatele.heslo).filter(Uzivatele.prezdivka==session["username"]).all()[0]
+        else:
+            user = postgreSQL.execute("SELECT prezdivka, email, heslo FROM uzivatele WHERE prezdivka = '{0}';".format(session["username"])).fetchall()[0]
+        if request.method == "GET":
+            return render_template("account.html",session=session,role=role(session),user=user)
+        if request.form["btn"] != "logout":
+            if request.form["btn"] != "flask":
+                return render_template("account.html",session=session,role=role(session),user=user)
+        return catchall(path)
+    else:
+        return redirect(url_for("index"))
 
 @flaskApp.route('/<path:path>', methods=["POST"])
 @flaskApp.route('/', defaults={'path': ''}, methods=["POST"])

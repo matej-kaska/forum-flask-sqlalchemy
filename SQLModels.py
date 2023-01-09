@@ -19,7 +19,6 @@ class Role(postgre.Model):
     __tablename__ = 'role'
     id = postgre.Column(postgre.Integer, primary_key=True)
     nazev = postgre.Column(postgre.String, nullable=False)
-    roles = postgre.relationship('Uzivatele', secondary=uzivatele_role, backref="uzivatel_role")
 
 class Komentare(postgre.Model):
     __tablename__ = 'komentare'

@@ -22,6 +22,7 @@
       <a class="btn btn-secondary bi bi-house" style="font-size: 120%;" href="/forum" role="button"></a>
       </svg></a>{% if session["username"] %}
       <a class="btn btn-secondary bi bi-gear" style="margin-left:6px; font-size: 120%;" href="/forum/sql" role="button"></a>
+      <a class="btn btn-secondary bi bi-person-square" style="margin-left:6px; font-size: 120%;" href="/forum/account" role="button"></a>
       {% endif %}
       <form method="post">
         <label  style="position:relative; top:4px; margin-left:6px; padding-right: 3px; border-radius: 15px; color:white; background-color: grey;">
@@ -144,6 +145,11 @@
       Nemůžeš měnit role majitele!
     </div>
 
+    {% elif message == "changeerror" %}
+    <div class="alert alert-danger alert-dismissible fade show js-alert" id="error-alert" role="alert">
+      Tato přezdívka nebo e-mail již existuje!
+    </div>
+
     {% endif %} {% endfor %} {% endif %} {% endwith %}
 
     <header>
@@ -178,6 +184,7 @@
     crossorigin="anonymous"
     ></script>
     <script src="{{url_for('static', filename='alert_anime.js')}}"></script>
+    <script src="{{url_for('static', filename='change_button.js')}}"></script>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}"  media="all" />
   </body>
 </html>
