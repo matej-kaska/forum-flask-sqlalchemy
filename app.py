@@ -1,7 +1,8 @@
 from SQLModels import postgre, Uzivatele, Role, Prispevky, Hodnoceni, Komentare, Odpovedi, uzivatele_role
 from SQL import engine, createUser, deleteUser, listUsers, createRole, deleteRole, listRolesOfUser, listRoles, grant, revoke, showGrant, setRole, lockTable, listTables
 from flask import Flask, render_template, request, session, flash, redirect, url_for
-from sqlalchemy import func, create_engine
+from sqlalchemy import func, create_engine, literal_column
+from sqlalchemy.dialects.postgresql import aggregate_order_by
 import hashlib
 import decimal
 
@@ -13,7 +14,7 @@ flasksqlalchemy = True
 flaskApp = Flask(__name__)
 flaskApp.app_context().push()
 flaskApp.secret_key = "16ecab1875791e2b6ed0c9a6dae5a12a79d92120e1c3afbd3a9c8535ce44660d"
-flaskApp.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:123@localhost:5432/forum"
+flaskApp.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:123@localhost:5432/forumbackup"
 #flaskApp.config['SQLALCHEMY_ECHO'] = True
 
 #sql administration commands
@@ -75,10 +76,10 @@ def prispevekData(komentareQuery, prispevekQuery, userhodnoceniQuery, id):
         # ===> Získání odpovědí u komentářů <===
         # ---> flask-sqlalchemy <---
         if flasksqlalchemy:
-            rawOdpovedi.append(postgre.session.query(Odpovedi.komentar_id, Odpovedi.text, Uzivatele.prezdivka, Odpovedi.id).outerjoin(Uzivatele).filter(Odpovedi.komentar_id==odpoved).all())
+            rawOdpovedi.append(postgre.session.query(Odpovedi.komentar_id, Odpovedi.text, Uzivatele.prezdivka, Odpovedi.id).outerjoin(Uzivatele).filter(Odpovedi.komentar_id==odpoved).order_by(Odpovedi.id).all())
         # ---> sqlalchemy <---
         else:
-            rawOdpovedi.append(postgreSQL.execute("SELECT o.komentar_id, o.text, u.prezdivka, o.id FROM odpovedi AS o LEFT JOIN komentare AS k ON o.komentar_id = k.id LEFT JOIN uzivatele AS u ON u.id = o.uzivatel_id WHERE k.id='{0}'".format(odpoved)))
+            rawOdpovedi.append(postgreSQL.execute("SELECT o.komentar_id, o.text, u.prezdivka, o.id FROM odpovedi AS o LEFT JOIN komentare AS k ON o.komentar_id = k.id LEFT JOIN uzivatele AS u ON u.id = o.uzivatel_id WHERE k.id='{0}' ORDER BY o.id".format(odpoved)))
     for rawOdpoved in rawOdpovedi:
         odpoved = queryPrispevekToList(rawOdpoved, False)
         if odpoved != []:
@@ -333,49 +334,48 @@ def prispevek(id):
                     # ---> sqlalchemy <--
                     else:
                         postgreSQL.execute("INSERT INTO odpovedi (text, uzivatel_id, komentar_id) VALUES ('{0}', '{1}', '{2}')".format(odpovedtext, session["userid"], komentarid))
-            if role(session) != "uživatel": 
-                if request.form["btn"] == "removePrispevek":
-                    if role(session) != "moderátor":
-                        # ===> Odstranění příspěvku, komentářů, odpovědí a hodnocení <===
-                        # ---> flask-sqlalchemy <--
-                        if flasksqlalchemy:
-                            odpovedi = Odpovedi.query.outerjoin(Komentare).outerjoin(Prispevky, Komentare.prispevek_id==Prispevky.id).filter(Prispevky.id == id).all()
-                            for odpoved in odpovedi:
-                                postgre.session.delete(odpoved)
-                                postgre.session.commit()
-                            Hodnoceni.query.filter(Hodnoceni.prispevek_id == id).delete()
-                            Komentare.query.filter(Komentare.prispevek_id == id).delete()
-                            Prispevky.query.filter(Prispevky.id == id).delete()
+            elif request.form["btn"] == "removePrispevek":
+                if role(session) != "moderátor":
+                    # ===> Odstranění příspěvku, komentářů, odpovědí a hodnocení <===
+                    # ---> flask-sqlalchemy <--
+                    if flasksqlalchemy:
+                        odpovedi = Odpovedi.query.outerjoin(Komentare).outerjoin(Prispevky, Komentare.prispevek_id==Prispevky.id).filter(Prispevky.id == id).all()
+                        for odpoved in odpovedi:
+                            postgre.session.delete(odpoved)
                             postgre.session.commit()
-                        # ---> sqlalchemy <--
-                        else:
-                            postgreSQL.execute("DELETE FROM hodnoceni WHERE prispevek_id = {0};".format(id))
-                            postgreSQL.execute("DELETE FROM odpovedi AS o USING komentare AS k, prispevky AS p WHERE o.komentar_id = k.id AND k.prispevek_id = p.id AND p.id = {0}".format(id))
-                            postgreSQL.execute("DELETE FROM komentare WHERE prispevek_id = {0};".format(id))
-                            postgreSQL.execute("DELETE FROM prispevky WHERE id = {0};".format(id))
-                        return redirect(url_for("forum"))
-                elif request.form["btn"][0:14] == "removeKomentar":
-                    komentarid = request.form["btn"][14:]
-                    # ===> Odstranění komentářů a odpovědí <===
-                    # ---> flask-sqlalchemy <--
-                    if flasksqlalchemy:
-                        Odpovedi.query.filter(Odpovedi.komentar_id == komentarid).delete()
-                        Komentare.query.filter(Komentare.id == komentarid).delete()
+                        Hodnoceni.query.filter(Hodnoceni.prispevek_id == id).delete()
+                        Komentare.query.filter(Komentare.prispevek_id == id).delete()
+                        Prispevky.query.filter(Prispevky.id == id).delete()
                         postgre.session.commit()
                     # ---> sqlalchemy <--
                     else:
-                        postgreSQL.execute("DELETE FROM odpovedi WHERE komentar_id = {0};".format(komentarid))
-                        postgreSQL.execute("DELETE FROM komentare WHERE id = {0};".format(komentarid))
-                elif request.form["btn"][0:13] == "removeOdpoved":
-                    odpovedid = request.form["btn"][13:]
-                    # ===> Odstranění odpovědí <===
-                    # ---> flask-sqlalchemy <--
-                    if flasksqlalchemy:
-                        Odpovedi.query.filter(Odpovedi.id == odpovedid).delete()
-                        postgre.session.commit()
-                    # ---> sqlalchemy <--
-                    else:
-                        postgreSQL.execute("DELETE FROM odpovedi WHERE id = {0};".format(odpovedid))
+                        postgreSQL.execute("DELETE FROM hodnoceni WHERE prispevek_id = {0};".format(id))
+                        postgreSQL.execute("DELETE FROM odpovedi AS o USING komentare AS k, prispevky AS p WHERE o.komentar_id = k.id AND k.prispevek_id = p.id AND p.id = {0}".format(id))
+                        postgreSQL.execute("DELETE FROM komentare WHERE prispevek_id = {0};".format(id))
+                        postgreSQL.execute("DELETE FROM prispevky WHERE id = {0};".format(id))
+                    return redirect(url_for("forum"))
+            elif request.form["btn"][0:14] == "removeKomentar":
+                komentarid = request.form["btn"][14:]
+                # ===> Odstranění komentářů a odpovědí <===
+                # ---> flask-sqlalchemy <--
+                if flasksqlalchemy:
+                    Odpovedi.query.filter(Odpovedi.komentar_id == komentarid).delete()
+                    Komentare.query.filter(Komentare.id == komentarid).delete()
+                    postgre.session.commit()
+                # ---> sqlalchemy <--
+                else:
+                    postgreSQL.execute("DELETE FROM odpovedi WHERE komentar_id = {0};".format(komentarid))
+                    postgreSQL.execute("DELETE FROM komentare WHERE id = {0};".format(komentarid))
+            elif request.form["btn"][0:13] == "removeOdpoved":
+                odpovedid = request.form["btn"][13:]
+                # ===> Odstranění odpovědí <===
+                # ---> flask-sqlalchemy <--
+                if flasksqlalchemy:
+                    Odpovedi.query.filter(Odpovedi.id == odpovedid).delete()
+                    postgre.session.commit()
+                # ---> sqlalchemy <--
+                else:
+                    postgreSQL.execute("DELETE FROM odpovedi WHERE id = {0};".format(odpovedid))
         for pris in data:
             if str(pris[0]) == id:
                 prispevek = pris
@@ -534,7 +534,71 @@ def new():
             return catchall(path)
     else:
         return redirect(url_for("index"))
-    
+
+@flaskApp.route("/forum/roles", methods=["GET", "POST"])
+def rolesWeb():
+    if session.get("username"):
+        if role(session) == "majitel":
+            if request.method == "POST":
+                if request.form["btn"] == "changerole":
+                    changedUser = request.form.get("uzivatelselect")
+                    changedRole = request.form.get("roleselect")
+                    if flasksqlalchemy:
+                        changedUserID = postgre.session.query(Uzivatele.id).filter(Uzivatele.prezdivka==changedUser).scalar()
+                        oldRole = postgre.session.query(func.max(Role.id)).join(uzivatele_role).join(Uzivatele).filter(Uzivatele.id==changedUserID).scalar()
+                    else:
+                        changedUserID = str(postgreSQL.execute("SELECT id FROM uzivatele WHERE prezdivka = '{0}'".format(changedUser)).fetchone()[0])
+                        oldRole = str(postgreSQL.execute("SELECT MAX(role_id) FROM uzivatele_role WHERE uzivatel_id = '{0}'".format(changedUserID)).fetchone()[0])
+                    if oldRole != "4":
+                        if flasksqlalchemy:
+                            if int(oldRole) > int(changedRole):
+                                oldRoles = postgre.session.query(Uzivatele).get(changedUserID)
+                                oldRoles.role = []     
+                                postgre.session.commit()                   
+                                roleinsert = uzivatele_role.insert().values(uzivatel_id=changedUserID,role_id=1)
+                                postgre.session.execute(roleinsert)
+                                postgre.session.commit()
+                            if int(changedRole) == 2 and int(changedRole) != int(oldRole):
+                                roleinsert = uzivatele_role.insert().values(uzivatel_id=changedUserID,role_id=2)
+                                postgre.session.execute(roleinsert)
+                                postgre.session.commit()
+                            if int(changedRole) == 3 and int(changedRole) != int(oldRole):
+                                if int(oldRole) == 1:
+                                    roleinsert = uzivatele_role.insert().values(uzivatel_id=changedUserID,role_id=2)
+                                    postgre.session.execute(roleinsert)
+                                roleinsert = uzivatele_role.insert().values(uzivatel_id=changedUserID,role_id=3)
+                                postgre.session.execute(roleinsert)
+                                postgre.session.commit()
+                        else:
+                            if int(oldRole) > int(changedRole):
+                                postgreSQL.execute("DELETE FROM uzivatele_role WHERE uzivatel_id = '{0}'".format(changedUserID))
+                                postgreSQL.execute("INSERT INTO uzivatele_role (uzivatel_id, role_id) VALUES ('{0}','{1}')".format(changedUserID, 1))
+                            if int(changedRole) == 2 and int(changedRole) != int(oldRole):
+                                postgreSQL.execute("INSERT INTO uzivatele_role (uzivatel_id, role_id) VALUES ('{0}','{1}')".format(changedUserID, 2))
+                            if int(changedRole) == 3 and int(changedRole) != int(oldRole):
+                                if int(oldRole) == 1:
+                                    postgreSQL.execute("INSERT INTO uzivatele_role (uzivatel_id, role_id) VALUES ('{0}','{1}')".format(changedUserID, 2))
+                                postgreSQL.execute("INSERT INTO uzivatele_role (uzivatel_id, role_id) VALUES ('{0}','{1}')".format(changedUserID, 3))
+                    else:
+                        flash("ownererror")
+            if flasksqlalchemy:
+                uzivatele = postgre.session.query(Uzivatele.prezdivka, func.string_agg(Role.nazev, aggregate_order_by(literal_column("', '"), Role.id))).select_from(uzivatele_role).join(Role).outerjoin(Uzivatele).group_by(Uzivatele.prezdivka).order_by(Uzivatele.prezdivka).all()
+            else:
+                uzivatele = postgreSQL.execute("SELECT u.prezdivka, string_agg(r.nazev::character varying, ', ' order by r.id) FROM uzivatele_role AS ur LEFT JOIN uzivatele AS u ON u.id = ur.uzivatel_id LEFT JOIN role AS r ON r.id = ur.role_id GROUP BY u.prezdivka ORDER BY u.prezdivka").fetchall()
+            if request.method == "GET":
+                return render_template("roles.html",session=session,role=role(session),uzivatele=uzivatele)
+            if request.form["btn"] != "logout":
+                if request.form["btn"] != "flask":
+                    return render_template("roles.html",session=session,role=role(session),uzivatele=uzivatele)
+            return catchall(path)
+        else:
+            return redirect(url_for("index"))
+    else:
+        return redirect(url_for("index"))
+
+@flaskApp.route("/forum/account", methods=["GET", "POST"])
+def account(): #smazat účet + příspěvky + hodnocení + komentáře + odpovědi
+    ...
 
 @flaskApp.route('/<path:path>', methods=["POST"])
 @flaskApp.route('/', defaults={'path': ''}, methods=["POST"])

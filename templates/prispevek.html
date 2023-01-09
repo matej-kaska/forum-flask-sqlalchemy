@@ -16,6 +16,9 @@
         <button type="submit" value="removePrispevek" name="btn" style="text-align: center; vertical-align: middle;overflow: hidden;border: none;white-space: nowrap;padding: 0px;position: sticky;left: 98%;" class="btn btn-link"><span  id="boot-icon" class="bi bi-dash-square" style="font-size: 24px; color: rgb(2, 117, 216);"></span></button>
         {% endif %}
         {% endif %}
+        {% if session["username"] == prispevek[0][3] %}
+        <button type="submit" value="removePrispevek" name="btn" style="text-align: center; vertical-align: middle;overflow: hidden;border: none;white-space: nowrap;padding: 0px;position: sticky;left: 98%;" class="btn btn-link"><span  id="boot-icon" class="bi bi-dash-square" style="font-size: 24px; color: rgb(2, 117, 216);"></span></button>
+        {% endif %}
       </th>
       <th style="width: 20%">Autor: {{ prispevek[0][3] }}</th>
       <th data-html="true" style="width: 18%;text-align: center; vertical-align: middle;" title="{{ hodnoceni }}"><select class="form-select" name="hodnoceniselect" aria-label="Vyberte uživatele" style="margin-right: 1%; margin-left:1%;text-align: center; vertical-align: middle;">
@@ -56,7 +59,11 @@
     {% for komentar in komentare %}
     <tr scope="row" style="text-align: center; vertical-align: middle;">
       <td>{{ komentar[1] }}
+        {% if role != "uživatel" %}
         <button type="submit" value="removeKomentar{{ komentar[0] }}" name="btn" style="text-align: center; vertical-align: middle;overflow: hidden;border: none;white-space: nowrap;padding: 0px;position: sticky;left: 98%;" class="btn btn-link"><span  id="boot-icon" class="bi bi-dash-square" style="font-size: 24px; color: rgb(2, 117, 216);"></span></button>
+        {% elif session["username"] == komentar[2] %}
+        <button type="submit" value="removeKomentar{{ komentar[0] }}" name="btn" style="text-align: center; vertical-align: middle;overflow: hidden;border: none;white-space: nowrap;padding: 0px;position: sticky;left: 98%;" class="btn btn-link"><span  id="boot-icon" class="bi bi-dash-square" style="font-size: 24px; color: rgb(2, 117, 216);"></span></button>
+        {% endif %}
       </td>
       <td style="text-align: center; vertical-align: middle;width: 20%">{{ komentar[2] }}</td>
     </tr>
@@ -64,7 +71,11 @@
         {% if odpoved[0] == komentar[0] %}
         <tr scope="row" style="text-align: center; vertical-align: middle;">
             <td colspan="2">{{ odpoved[1] }} (Autor: {{ odpoved[2] }})
+              {% if role != "uživatel" %}
               <button type="submit" value="removeOdpoved{{ odpoved[3] }}" name="btn" style="text-align: center; vertical-align: middle;overflow: hidden;border: none;white-space: nowrap;padding: 0px;position: sticky;left: 98%;" class="btn btn-link"><span  id="boot-icon" class="bi bi-dash-square" style="font-size: 24px; color: rgb(2, 117, 216);"></span></button>
+              {% elif session["username"] == odpoved[2] %}
+              <button type="submit" value="removeOdpoved{{ odpoved[3] }}" name="btn" style="text-align: center; vertical-align: middle;overflow: hidden;border: none;white-space: nowrap;padding: 0px;position: sticky;left: 98%;" class="btn btn-link"><span  id="boot-icon" class="bi bi-dash-square" style="font-size: 24px; color: rgb(2, 117, 216);"></span></button>
+              {% endif %}
             </td>
         </tr>    
         {% endif %}

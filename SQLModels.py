@@ -13,6 +13,7 @@ class Uzivatele(postgre.Model):
     prezdivka = postgre.Column(postgre.String, nullable=False)
     heslo = postgre.Column(postgre.String, nullable=False)
     email = postgre.Column(postgre.String, nullable=False)
+    role = postgre.relationship('Role', secondary=uzivatele_role, backref="uzivatel_role")
 
 class Role(postgre.Model):
     __tablename__ = 'role'

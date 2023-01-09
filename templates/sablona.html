@@ -139,6 +139,11 @@
       Nastala chyba při odebírání práva!
     </div>
 
+    {% elif message == "ownererror" %}
+    <div class="alert alert-danger alert-dismissible fade show js-alert" id="error-alert" role="alert">
+      Nemůžeš měnit role majitele!
+    </div>
+
     {% endif %} {% endfor %} {% endif %} {% endwith %}
 
     <header>

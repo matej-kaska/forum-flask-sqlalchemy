@@ -10,7 +10,10 @@
     <tr>
       <thead>
       <th scope="row" style="text-align: center; vertical-align: middle;">Příspěvek
-        <a type="button" href="/forum/new" style="text-align: center; vertical-align: middle;overflow: hidden;border: none;white-space: nowrap;padding: 0px;position: sticky;left: 99%;" class="btn btn-link"><span style=" font-size:26px;" class="bi bi-plus-square"></span></a>
+        {% if role == "majitel" %}
+        <a type="button" href="/forum/roles" style="text-align: center; vertical-align: middle;overflow: hidden;border: none;white-space: nowrap;padding: 0px;position: sticky;right: 99%;" class="btn btn-link"><span id="boot-icon" class="bi bi-person-square" style="font-size: 26px; color: rgb(2, 117, 216);"></span></a>
+        {% endif %}
+        <a type="button" href="/forum/new" style="text-align: center; vertical-align: middle;overflow: hidden;border: none;white-space: nowrap;padding: 0px;position: sticky;left: 99%;" class="btn btn-link"><span style="font-size:26px;" class="bi bi-plus-square"></span></a>
       </th>
       <th style="width: 15%; text-align: center; vertical-align: middle;">Autor</th>
       <th style="width: 5%; text-align: center; vertical-align: middle;">Hodnocení</th>

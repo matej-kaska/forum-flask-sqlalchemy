@@ -1,0 +1,59 @@
+{% extends "sablona.html" %} {% block main %}
+<article>
+  <header class="header text-center" style="color: black; padding-top: 4%">
+    <h1><span>Změnit role</span></h1>
+  </header>
+</article>
+
+<form method="post">
+<section class="section position-center" id="Text" style="padding-left: 10%; padding-right: 10%">
+  <table class="table table-hover table-bordered bdr">
+    <tr>
+      <thead>
+        <th>Uživatel</th>
+        <th style="width: 30%">Role</th>
+      </thead>
+    </tr>
+    <tr>
+      <td>Vybraný uživatel: 
+        <select class="form-select" name="uzivatelselect" aria-label="Vyberte uživatele" style="margin-right: 1%; margin-left:1%;text-align: center; vertical-align: middle;">
+          {% for uzivatel in uzivatele %}
+          <option value="{{ uzivatel[0] }}">{{ uzivatel[0] }}</option>
+          {% endfor %}
+        </select>
+      </td>
+      <td>Vybraná role: 
+        <select class="form-select" name="roleselect" aria-label="Vyberte uživatele" style="margin-right: 1%; margin-left:1%;text-align: center; vertical-align: middle;">
+          <option value="{{ 1 }}">uzivatel</option>
+          <option value="{{ 2 }}">moderator</option>
+          <option value="{{ 3 }}">admin</option>
+        </select>
+      </td>
+    </tr>
+  </table>
+  <div class="float-right">
+    <button class="btn btn-dark" type="submit" name="btn" value="changerole" style="justify-content: left; margin-top: 3px;">
+      Změnit roli
+    </button>
+  </div>
+  <table style="margin-top: 78px;" class="table table-hover table-bordered bdr">
+    <tr>
+      <thead>
+        <th>Uživatel</th>
+        <th style="width: 40%">Role</th>
+      </thead>
+    </tr>
+    {% for uzivatel in uzivatele %}
+    <tr>
+      <td>
+        {{ uzivatel[0] }}
+      </td>
+      <td>
+        {{ uzivatel[1] }}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</form>
+</section>
+{% endblock %}
