@@ -1,4 +1,4 @@
-from SQLModels import postgre, Uzivatele, Role, Prispevky, Hodnoceni, Komentare, Odpovedi, uzivatele_role
+from SQLModels import postgre, Uzivatele, Role, Prispevky, Hodnoceni, Komentare, Odpovedi, Uzivatele_audits, uzivatele_role
 from SQL import engine, createUser, deleteUser, listUsers, createRole, deleteRole, listRolesOfUser, listRoles, grant, revoke, showGrant, setRole, lockTable, listTables
 from flask import Flask, render_template, request, session, flash, redirect, url_for
 from sqlalchemy import func, create_engine, literal_column
@@ -545,13 +545,18 @@ def rolesWeb():
                 if request.form["btn"] == "changerole":
                     changedUser = request.form.get("uzivatelselect")
                     changedRole = request.form.get("roleselect")
+                    # ===> Získání id a nejvyšší role uživatele <===
+                    # ---> flask-sqlalchemy <--
                     if flasksqlalchemy:
                         changedUserID = postgre.session.query(Uzivatele.id).filter(Uzivatele.prezdivka==changedUser).scalar()
                         oldRole = postgre.session.query(func.max(Role.id)).join(uzivatele_role).join(Uzivatele).filter(Uzivatele.id==changedUserID).scalar()
+                    # ---> sqlalchemy <--
                     else:
                         changedUserID = str(postgreSQL.execute("SELECT id FROM uzivatele WHERE prezdivka = '{0}'".format(changedUser)).fetchone()[0])
                         oldRole = str(postgreSQL.execute("SELECT MAX(role_id) FROM uzivatele_role WHERE uzivatel_id = '{0}'".format(changedUserID)).fetchone()[0])
                     if oldRole != "4":
+                        # ===> Změna role uživatele <===
+                        # ---> flask-sqlalchemy <--
                         if flasksqlalchemy:
                             if int(oldRole) > int(changedRole):
                                 oldRoles = postgre.session.query(Uzivatele).get(changedUserID)
@@ -571,6 +576,7 @@ def rolesWeb():
                                 roleinsert = uzivatele_role.insert().values(uzivatel_id=changedUserID,role_id=3)
                                 postgre.session.execute(roleinsert)
                                 postgre.session.commit()
+                        # ---> sqlalchemy <--
                         else:
                             if int(oldRole) > int(changedRole):
                                 postgreSQL.execute("DELETE FROM uzivatele_role WHERE uzivatel_id = '{0}'".format(changedUserID))
@@ -583,10 +589,13 @@ def rolesWeb():
                                 postgreSQL.execute("INSERT INTO uzivatele_role (uzivatel_id, role_id) VALUES ('{0}','{1}')".format(changedUserID, 3))
                     else:
                         flash("ownererror")
+            # ===> Získání všech uživatelů a jejich rolí <===
+            # ---> flask-sqlalchemy <--
             if flasksqlalchemy:
-                uzivatele = postgre.session.query(Uzivatele.prezdivka, func.string_agg(Role.nazev, aggregate_order_by(literal_column("', '"), Role.id))).select_from(uzivatele_role).join(Role).outerjoin(Uzivatele).group_by(Uzivatele.prezdivka).order_by(Uzivatele.prezdivka).all()
+                uzivatele = postgre.session.query(Uzivatele.prezdivka, func.string_agg(Role.nazev, aggregate_order_by(literal_column("', '"), Role.id))).select_from(uzivatele_role).join(Role).outerjoin(Uzivatele).group_by(Uzivatele.prezdivka, Uzivatele.id).order_by(Uzivatele.id).all()
+            # ---> sqlalchemy <--
             else:
-                uzivatele = postgreSQL.execute("SELECT u.prezdivka, string_agg(r.nazev::character varying, ', ' order by r.id) FROM uzivatele_role AS ur LEFT JOIN uzivatele AS u ON u.id = ur.uzivatel_id LEFT JOIN role AS r ON r.id = ur.role_id GROUP BY u.prezdivka ORDER BY u.prezdivka").fetchall()
+                uzivatele = postgreSQL.execute("SELECT u.prezdivka, string_agg(r.nazev::character varying, ', ' order by r.id) FROM uzivatele_role AS ur LEFT JOIN uzivatele AS u ON u.id = ur.uzivatel_id LEFT JOIN role AS r ON r.id = ur.role_id GROUP BY u.prezdivka, u.id ORDER BY u.id").fetchall()
             if request.method == "GET":
                 return render_template("roles.html",session=session,role=role(session),uzivatele=uzivatele)
             if request.form["btn"] != "logout":
@@ -605,6 +614,8 @@ def account():
             if request.form["btn"] == "changeDetails":
                 changedEmail = request.form.get("changeEmailinput")
                 changedPassword = request.form.get("changePasswordinput")
+                # ===> Změna emailu nebo hesla uživatele <===
+                # ---> flask-sqlalchemy <--
                 if flasksqlalchemy:
                     if changedEmail != "":
                         if changedEmail not in queryToList(postgre.session.query(Uzivatele.email).all()):
@@ -618,6 +629,7 @@ def account():
                         heslo = Uzivatele.query.filter_by(id = session["userid"]).first()
                         heslo.heslo = hashed_pass
                         postgre.session.commit()
+                # ---> sqlalchemy <--
                 else:
                     if changedEmail != "":
                         if changedEmail not in queryToList(postgreSQL.execute("SELECT email FROM uzivatele").fetchall()):
@@ -628,6 +640,8 @@ def account():
                         hashed_pass = hashlib.sha256(changedPassword.encode("utf-8")).hexdigest()
                         postgreSQL.execute("UPDATE uzivatele SET heslo = '{0}' WHERE id = '{1}'".format(hashed_pass, session["userid"]))
             if request.form["btn"] == "deleteAccount":
+                # ===> Odstranění uživatele a jeho hodnocení, odpovědí, komentářů a příspěvků <===
+                # ---> flask-sqlalchemy <--
                 if flasksqlalchemy:
                     deletedRoles = postgre.session.query(Uzivatele).get(session["userid"])
                     deletedRoles.role = []     
@@ -638,6 +652,7 @@ def account():
                     Prispevky.query.filter(Prispevky.uzivatel_id == session["userid"]).delete()
                     Uzivatele.query.filter(Uzivatele.id == session["userid"]).delete()
                     postgre.session.commit()
+                # ---> sqlalchemy <--
                 else:
                     postgreSQL.execute("DELETE FROM hodnoceni WHERE uzivatel_id = {0};".format(session["userid"]))
                     postgreSQL.execute("DELETE FROM odpovedi WHERE uzivatel_id = {0};".format(session["userid"]))
@@ -648,8 +663,11 @@ def account():
                 session.pop("username")
                 flash("logout")
                 return redirect(url_for("index"))
+        # ===> Získání přezdívky, emailu a hesla uživatele <===
+        # ---> flask-sqlalchemy <--
         if flasksqlalchemy:
             user = postgre.session.query(Uzivatele.prezdivka, Uzivatele.email, Uzivatele.heslo).filter(Uzivatele.prezdivka==session["username"]).all()[0]
+        # ---> sqlalchemy <--
         else:
             user = postgreSQL.execute("SELECT prezdivka, email, heslo FROM uzivatele WHERE prezdivka = '{0}';".format(session["username"])).fetchall()[0]
         if request.method == "GET":
@@ -658,6 +676,25 @@ def account():
             if request.form["btn"] != "flask":
                 return render_template("account.html",session=session,role=role(session),user=user)
         return catchall(path)
+    else:
+        return redirect(url_for("index"))
+
+@flaskApp.route("/forum/audits", methods=["GET", "POST"])
+def audits():
+    if session.get("username"):
+        if role(session) == "majitel":
+            if request.method == "GET":
+                # ===> Získání dat z tabulky uzivatele_audits <===
+                # ---> flask-sqlalchemy <--
+                if flasksqlalchemy:
+                    audits = postgre.session.query(Uzivatele_audits.uzivatel_id, Uzivatele_audits.prezdivka, Uzivatele_audits.email, Uzivatele_audits.heslo, Uzivatele_audits.zmena).all()
+                # ---> sqlalchemy <-
+                else:
+                    audits = postgreSQL.execute("SELECT uzivatel_id, prezdivka, email, heslo, zmena FROM uzivatele_audits").fetchall()
+                return render_template("audits.html",session=session,role=role(session),audits=audits)
+            return catchall(path)
+        else:
+            return redirect(url_for("index"))
     else:
         return redirect(url_for("index"))
 

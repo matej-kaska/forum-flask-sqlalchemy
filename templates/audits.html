@@ -1,0 +1,32 @@
+{% extends "sablona.html" %} {% block main %}
+<article>
+  <header class="header text-center" style="color: black; padding-top: 4%">
+    <h1><span>Historie změn dat uživatelů</span></h1>
+  </header>
+</article>
+
+<form method="post">
+<section class="section position-center" id="Text" style="padding-left: 5%; padding-right: 5%">
+  <table class="table table-hover table-bordered bdr">
+    <tr>
+      <thead>
+        <th>ID</th>
+        <th>Přezdívka</th>
+        <th>E-mail</th>
+        <th>Heslo</th>
+        <th>Datum změny</th>
+      </thead>
+    </tr>
+    {% for audit in audits %}
+    <tr>
+      <td>{{ audit[0] }}</td>
+      <td>{{ audit[1] }}</td>
+      <td>{{ audit[2] }}</td>
+      <td>{{ audit[3] }}</td>
+      <td>{{ (audit[4]|string)[:19] }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</form>
+</section>
+{% endblock %}
