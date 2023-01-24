@@ -21,14 +21,16 @@ WHERE hodnoceni < (
 GROUP BY (p.nazev);
 
 3) [Vypsání všech příspěvků podle průměru jejich hodnocení. Od nejlépe hodnoceného po nejhůře]
-SELECT p.nazev, AVG(h.hodnoceni) AS hodnoceni, p.autor
+SELECT p.nazev, AVG(h.hodnoceni) AS hodnoceni, u.prezdivka
 FROM prispevky AS p
 LEFT JOIN hodnoceni AS h
 ON p.id = h.prispevek_id
-GROUP BY (p.nazev, p.autor)
+LEFT JOIN uzivatele AS u
+ON u.id = p.uzivatel_id
+GROUP BY (p.nazev, u.prezdivka)
 ORDER BY hodnoceni DESC;
 
-4) [Hierarchie; Vypsání všech uživatelů, jejich e-mailů a počtu příspěvků, kteří jsou moderátoři, admini nebo owneři]
+4) [Hierarchie; Vypsání všech uživatelů, jejich e-mailů a počtu příspěvků, kteří jsou moderátoři, admini nebo majitelé]
 SELECT u.prezdivka, r.nazev, u.email, COUNT(p.id) AS pocet_prispevku
 FROM uzivatele AS u
 LEFT JOIN uzivatele_role AS ur
@@ -41,7 +43,7 @@ WHERE r.id > 1
 GROUP BY u.id, r.id
 ORDER BY r.id DESC;
 
-B) [Vypsání počtu ownerů, adminů, moderátorů, uživatelů a počet jejich příspěvků]
+B) [Vypsání počtu majitelů, adminů, moderátorů, uživatelů a počet jejich příspěvků]
 CREATE OR REPLACE VIEW number_of_users AS
     SELECT r.nazev, COUNT(r.nazev) AS pocet_uzivatelu, COUNT(p.id) AS pocet_prispevku
     FROM role AS r
@@ -105,6 +107,8 @@ END LOOP;
 	close cur;
 END;
 $BODY$;
+
+random_hodnoceni()
 
 F) [Trigger; Logování (zaznamenávání) změn dat v tabulce uzivatele]
 CREATE OR REPLACE FUNCTION public.uzivatele_changes()
@@ -212,40 +216,3 @@ BEGIN
   RETURN result;
 END;
 $BODY$;
-
- -[Ostatní doplňkové selecty]-
-[Vypsání uživatelů, kteří mají email "XXX@gmail.com" nebo "XXX@seznam.cz" a zároveň mají delší nebo stejně dlouho přezdívku než 11 znaků a jsou seřazeny od nejdelší přezdívky]
-SELECT prezdivka, email, heslo FROM uzivatele
-WHERE email LIKE ANY ('{%@gmail.com, %@seznam.cz}')
-GROUP BY id
-HAVING LENGTH(prezdivka) >= 11
-ORDER BY LENGTH(prezdivka) DESC;
-
-[Vypsání všech příspěvků podle průměru jejich hodnocení. Od nejlépe hodnoceného po nejhůře]
-SELECT p.nazev, AVG(h.hodnoceni) AS hodnoceni
-FROM prispevky AS p
-LEFT JOIN hodnoceni AS h
-ON p.id = h.prispevek_id
-GROUP BY (p.nazev)
-ORDER BY hodnoceni DESC;
-
-[Vypsání všech uživatelů a jejich e-mailů, kteří jsou moderátoři, admini nebo owneři]
-SELECT r.nazev, u.prezdivka, u.email
-FROM uzivatele AS u
-LEFT JOIN uzivatele_role AS ur
-ON u.id = ur.uzivatel_id
-LEFT JOIN role AS r
-ON ur.role_id = r.id
-WHERE r.id > 1
-ORDER BY r.id DESC;
-
-[Vypsání kolik ownerů, adminů, moderátorů a uživatelů je zaregistrovaných]
-CREATE OR REPLACE VIEW number_of_users AS
-    SELECT r.nazev, COUNT(r.nazev)
-    FROM role AS r
-    RIGHT JOIN uzivatele_role AS ur
-    ON r.id = ur.role_id
-    GROUP BY r.nazev
-    ORDER BY COUNT(r.nazev) ASC;
-    
-SELECT * FROM number_of_users;
