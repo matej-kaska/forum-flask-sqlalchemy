@@ -1,7 +1,7 @@
-{% extends "sablona.html" %} {% block main %}
+{% extends "template.html" %} {% block main %}
 <article>
   <header class="header text-center" style="color: black; padding-top: 4%">
-    <h1><span>Historie změn dat uživatelů</span></h1>
+    <h1><span>History of changes</span></h1>
   </header>
 </article>
 
@@ -11,10 +11,10 @@
     <tr>
       <thead>
         <th>ID</th>
-        <th>Přezdívka</th>
+        <th>Username</th>
         <th>E-mail</th>
-        <th>Heslo</th>
-        <th>Datum změny</th>
+        <th>Password</th>
+        <th>Date of change</th>
       </thead>
     </tr>
     {% for audit in audits %}

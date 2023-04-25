@@ -14,7 +14,7 @@ footer{
     padding-right: 11%;
 }
 
-/*WALLPAPER*/
+/* WALLPAPER */
 body {
     background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
     background-size: 400% 400%;
@@ -33,7 +33,7 @@ body {
 }
 }
 
-/* TABULKY */
+/* TABLES */
 .bdr {
     border-radius: 8px;
     overflow: hidden;
@@ -41,13 +41,10 @@ body {
     color: white;
 }
 
-
-/* MEZIŘÁDKOVÉ ČÁRKY */
 .featurette-divider {
     background-color: #e73c7e;
 }
 
-/* UNIVERZITA SEZNAM */
 h2 {
     color: white;
     cursor: pointer;
@@ -76,7 +73,7 @@ span.input-group-text {
     color: rgb(214, 211, 211);
 }
 
-/* NADPIS NOSQL NA HOMEPAGE */
+/* HEADER 2 */
 .waviy {
   position: relative;
   -webkit-box-reflect: below -20px linear-gradient(transparent, rgba(0,0,0,.2));
@@ -104,7 +101,7 @@ span.input-group-text {
     background-color: #343a40;
 }
 
-/*HEADER*/
+/* HEADER */
 h1 {
 color: hsl(0, 0%, 28%);
 font-size: 50px;
@@ -128,7 +125,7 @@ color: #fff;
 text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 40px #fff;
 }
 
-/* SEKCE */
+/* SECTIONS */
 section {
     padding-left: 17.5%;
     padding-right: 17.5%;
@@ -169,7 +166,7 @@ section {
     width: 100%;
 }
 
-/* ANIMACE REFRESH */
+/* ANIMATION REFRESH */
 @keyframes rotate {
     from {transform: rotate(0deg)}
     to {transform: rotate(360deg)}
@@ -184,7 +181,7 @@ section {
 }
 
 
-/* CHECKBOXY*/
+/* CHECKBOXES */
 input[type=checkbox] {
     appearance: none;
     width: 20px;

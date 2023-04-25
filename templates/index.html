@@ -1,11 +1,12 @@
-{% extends "sablona.html" %} {% block main %}
+{% extends "template.html" %} {% block main %}
 <article>
   <header class="header text-center" style="color: black; padding-top: 5%">
     <div class="waviy">
-      <span style="--i:1">R</span>
-      <span style="--i:2">D</span>
-      <span style="--i:3">B</span>
-      <span style="--i:4">S</span>
+      <span style="--i:1">F</span>
+      <span style="--i:2">o</span>
+      <span style="--i:3">r</span>
+      <span style="--i:4">u</span>
+      <span style="--i:5">m</span>
      </div>
   </header>
   <section class="section position-center" id="Text" style="padding-left: 15%; padding-right: 15%; padding-top: 15%">
@@ -13,24 +14,24 @@
       <fieldset>
         <div class="input-group mb-2">
           <div class="input-group-prepend">
-            <span class="input-group-text" id="basic-addon1">Přezdívka</span>
+            <span class="input-group-text" id="basic-addon1">Username</span>
           </div>
-          <input id="forUsername" type="text" class="form-control" name="username" placeholder="Zadej přezdívku" required style="background-color: #333333; color: white"/>
+          <input id="forUsername" type="text" class="form-control" name="username" placeholder="Enter username" required style="background-color: #333333; color: white"/>
         </div>
         <div class="input-group mb-2">
           <div class="input-group-prepend">
-            <span class="input-group-text" id="basic-addon1">Heslo</span>
+            <span class="input-group-text" id="basic-addon1">Password</span>
           </div>
-          <input id="forPassword" type="password" class="form-control" name="password" placeholder="Zadej heslo" required style="background-color: #333333; color: white"/>
+          <input id="forPassword" type="password" class="form-control" name="password" placeholder="Enter password" required style="background-color: #333333; color: white"/>
         </div>
         <div class="float-right">
           <a href="/register">
             <button type="button"  name="btn" value="register" style="justify-content: left; margin-top: 3px;" class="btn btn-outline-dark">
-              Zaregistrovat se
+              Sign up
             </button>
           </a>
           <button class="btn btn-dark" type="submit" name="btn" value="login" style="justify-content: left; margin-top: 3px;">
-            Přihlásit se
+            Login
           </button>
         </div>
       </fieldset>

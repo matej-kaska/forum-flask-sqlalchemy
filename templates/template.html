@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head class="head">
-    <title>{% block title %} Divočákos {% endblock %}</title>
+    <title>{% block title %} Forum {% endblock %}</title>
     <link rel="icon" type="image/x-icon" href="/static/resources/favicon.png">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
@@ -26,7 +26,7 @@
       {% endif %}
       <form method="post">
         <label  style="position:relative; top:4px; margin-left:6px; padding-right: 3px; border-radius: 15px; color:white; background-color: grey;">
-          <button style="color: white " type="submit" name="btn" value="flask" class="btn btn-primary">Změnit</button>
+          <button style="color: white " type="submit" name="btn" value="flask" class="btn btn-primary">Change</button>
           {% if session["engine"] != "" %}
           {{ session["engine"] }}
           {% else %}
@@ -50,7 +50,7 @@
         for="loginusername"
         class="text-primary"
         style="padding-right: 2px"
-        >Jste přihlášen jako {{ session["username"] }}!</label
+        >You are logged in as {{ session["username"] }}!</label
       >
       <button
         type="submit"
@@ -58,7 +58,7 @@
         value="logout"
         class="btn btn-outline-primary"
       >
-        Odhlásit se
+        Logout
       </button>
       
 
@@ -72,88 +72,88 @@
 
     {% if message == "loginsucces" %}
     <div class="alert alert-success alert-dismissible fade show js-alert" id="success-alert" role="alert">
-      Přihlášení proběhlo úspěšně!
+      Logging in was successfull!
     </div>
 
     {% elif message == "loginerror" %}
     <div class="alert alert-danger alert-dismissible fade show js-alert" id="error-alert" role="alert">
-      Přihlášení se nezdařilo!
+      Logging in has failed!
     </div>
 
     {% elif message == "regsucces" %}
     <div class="alert alert-success alert-dismissible fade show js-alert" id="success-alert" role="alert">
-      Registrace proběhla úspěšně!
+      Singing up was successfull!
     </div>
 
     {% elif message == "regerror" %}
     <div class="alert alert-danger alert-dismissible fade show js-alert" id="error-alert" role="alert">
-      Registrace se nezdařila!
+      Singing up has failed!
     </div>
 
     {% elif message == "logout" %}
     <div class="alert alert-primary alert-dismissible fade show js-alert" id="success-alert" role="alert">
-      Úspěšně odhlášen!
+      Successfully logged out!
     </div>
 
     {% elif message == "invalidid" %}
     <div class="alert alert-danger alert-dismissible fade show js-alert" id="error-alert" role="alert">
-      Toto ID již exisuje!
+      This ID already exists!
     </div>
 
     {% elif message == "engineerror" %}
     <div class="alert alert-danger alert-dismissible fade show js-alert" id="error-alert" role="alert">
-      Špatné heslo!
+      Wrong password!
     </div>
 
     {% elif message == "createerror" %}
     <div class="alert alert-danger alert-dismissible fade show js-alert" id="error-alert" role="alert">
-      Nastala chyba při vytváření účtu!
+      An error occured while creating an account!
     </div>
 
     {% elif message == "deleteerror" %}
     <div class="alert alert-danger alert-dismissible fade show js-alert" id="error-alert" role="alert">
-      Nastala chyba při mazání účtu!
+      An error occured while deleting an account!
     </div>
 
     {% elif message == "createerrorrole" %}
     <div class="alert alert-danger alert-dismissible fade show js-alert" id="error-alert" role="alert">
-      Nastala chyba při vytváření role!
+      An error occured while creating a role!
     </div>
 
     {% elif message == "deleteerrorrole" %}
     <div class="alert alert-danger alert-dismissible fade show js-alert" id="error-alert" role="alert">
-      Nastala chyba při mazání role!
+      An error occured while deleting a role!
     </div>
 
     {% elif message == "granterrorrole" %}
     <div class="alert alert-danger alert-dismissible fade show js-alert" id="error-alert" role="alert">
-      Nastala chyba při přidělování role!
+      An error occured while assigning a role!
     </div>
 
     {% elif message == "granterror" %}
     <div class="alert alert-danger alert-dismissible fade show js-alert" id="error-alert" role="alert">
-      Nastala chyba při přidávání práva!
+      An error occured while adding a permission!
     </div>
 
     {% elif message == "revokeerror" %}
     <div class="alert alert-danger alert-dismissible fade show js-alert" id="error-alert" role="alert">
-      Nastala chyba při odebírání práva!
+      An error occured while deleting a permission!
     </div>
 
     {% elif message == "ownererror" %}
     <div class="alert alert-danger alert-dismissible fade show js-alert" id="error-alert" role="alert">
-      Nemůžeš měnit role majitele!
+      You can't change role of owner!
     </div>
 
     {% elif message == "changeerror" %}
     <div class="alert alert-danger alert-dismissible fade show js-alert" id="error-alert" role="alert">
-      Tato přezdívka nebo e-mail již existuje!
+      This username or e-mail already exists!
     </div>
 
     {% endif %} {% endfor %} {% endif %} {% endwith %}
 
     <header>
-      <h1>{% block nadpis %} {% endblock %}</h1>
+      <h1>{% block header %} {% endblock %}</h1>
     </header>
 
     <main>{% block main %} {% endblock %}</main>
@@ -162,7 +162,7 @@
     <footer>
       <hr class="featurette-divider" style="background-color: white">
       <div class="form-row">
-        <div class="col"><small class="display">Copyright © Divočákos</small></div>
+        <div class="col"><small href="https://github.com/matej-kaska" class="display">by matej-kaska</small></div>
         <div class="col text-right"><small class="display">{{ time }}</small></div>
       </div>
     </footer>

@@ -1,7 +1,7 @@
 {% extends "sablona.html" %} {% block main %}
 <article>
   <header class="header text-center" style="color: black; padding-top: 4%">
-    <h1><span>Změnit roli</span></h1>
+    <h1><span>Change roles</span></h1>
   </header>
 </article>
 
@@ -10,21 +10,21 @@
   <table class="table table-hover table-bordered bdr">
     <tr>
       <thead>
-        <th>Uživatel</th>
+        <th>User</th>
         <th style="width: 30%">Role</th>
       </thead>
     </tr>
     <tr>
-      <td>Vybraný uživatel: 
-        <select class="form-select" name="uzivatelselect" aria-label="Vyberte uživatele" style="margin-right: 1%; margin-left:1%;text-align: center; vertical-align: middle;">
-          {% for uzivatel in uzivatele %}
-          <option value="{{ uzivatel[0] }}">{{ uzivatel[0] }}</option>
+      <td>Selected user: 
+        <select class="form-select" name="userSelect" aria-label="Select user" style="margin-right: 1%; margin-left:1%;text-align: center; vertical-align: middle;">
+          {% for user in users %}
+          <option value="{{ user[0] }}">{{ user[0] }}</option>
           {% endfor %}
         </select>
       </td>
-      <td>Vybraná role: 
-        <select class="form-select" name="roleselect" aria-label="Vyberte uživatele" style="margin-right: 1%; margin-left:1%;text-align: center; vertical-align: middle;">
-          <option value="{{ 1 }}">uzivatel</option>
+      <td>Selected role: 
+        <select class="form-select" name="roleSelect" aria-label="Select role" style="margin-right: 1%; margin-left:1%;text-align: center; vertical-align: middle;">
+          <option value="{{ 1 }}">user</option>
           <option value="{{ 2 }}">moderator</option>
           <option value="{{ 3 }}">admin</option>
         </select>
@@ -33,23 +33,23 @@
   </table>
   <div class="float-right">
     <button class="btn btn-dark" type="submit" name="btn" value="changerole" style="justify-content: left; margin-top: 3px;">
-      Změnit roli
+      Change role
     </button>
   </div>
   <table style="margin-top: 78px;" class="table table-hover table-bordered bdr">
     <tr>
       <thead>
-        <th>Uživatel</th>
+        <th>User</th>
         <th style="width: 40%">Role</th>
       </thead>
     </tr>
-    {% for uzivatel in uzivatele %}
+    {% for user in users %}
     <tr>
       <td>
-        {{ uzivatel[0] }}
+        {{ user[0] }}
       </td>
       <td>
-        {{ uzivatel[1] }}
+        {{ user[1] }}
       </td>
     </tr>
     {% endfor %}

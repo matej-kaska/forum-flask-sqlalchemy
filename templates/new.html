@@ -1,7 +1,7 @@
-{% extends "sablona.html" %} {% block main %}
+{% extends "template.html" %} {% block main %}
 <article>
   <header class="header text-center" style="color: black; padding-top: 4%">
-    <h1><span>Přidat příspěvek</span></h1>
+    <h1><span>Add post</span></h1>
   </header>
 </article>
 
@@ -10,25 +10,25 @@
   <fieldset>
     <div class="input-group mb-2">
       <div class="input-group-prepend">
-        <span class="input-group-text" id="basic-addon1">Název příspěvku</span>
+        <span class="input-group-text" id="basic-addon1">Title of post</span>
       </div>
-      <input id="forNazev" type="text" class="form-control" name="nazev" placeholder="Zadej název příspěvku" required style="background-color: #333333; color: white"/>
+      <input id="forTitle" type="text" class="form-control" name="title" placeholder="Enter title of post" required style="background-color: #333333; color: white"/>
     </div>
     <div class="input-group mb-2">
       <div class="input-group-prepend">
         <span class="input-group-text" id="basic-addon1">Text</span>
       </div>
-      <textarea  id="forText" style="height:200px" type="text" class="form-control" name="text" placeholder="Zadejte text" required style="background-color: #333333; color: white"></textarea>
+      <textarea  id="forText" style="height:200px" type="text" class="form-control" name="text" placeholder="Enter text" required style="background-color: #333333; color: white"></textarea>
     </div>
     <div class="input-group mb-2">
         <div class="input-group-prepend">
-          <span class="input-group-text" id="basic-addon1">Obrázek</span>
+          <span class="input-group-text" id="basic-addon1">Picture</span>
         </div>
-        <input id="forObrazek" type="text" class="form-control" name="obrazek" placeholder="Zadejte odkaz na obrázek" style="background-color: #333333; color: white"/>
+        <input id="forPicture" type="text" class="form-control" name="picture" placeholder="Enter link for picture" style="background-color: #333333; color: white"/>
     </div>
       <div class="float-right">
-        <button class="btn btn-dark" type="submit" name="btn" value="addPrispevek" style="justify-content: left; margin-top: 3px;">
-          Přidat příspěvek
+        <button class="btn btn-dark" type="submit" name="btn" value="addPost" style="justify-content: left; margin-top: 3px;">
+          Add post
         </button>
       </div>
     </form>

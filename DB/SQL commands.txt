@@ -1,6 +1,6 @@
 A)
-1) [Průměrný počet řádků na jednu tabulku]
-SELECT table_schema as "Schema", FLOOR(AVG(row_count)) AS "Průměrný počet řádků na jednu tabulku"
+1) [Average number of rows per table]
+SELECT table_schema as "Schema", FLOOR(AVG(row_count)) AS "Average number of rows per table"
 FROM (
   SELECT table_schema, count_rows_of_table(table_schema, table_name) AS row_count
   FROM information_schema.tables
@@ -9,7 +9,7 @@ FROM (
 ) AS per_table_count_subquery
 GROUP BY table_schema
 
-2) [Počet hodnocení na příspěvku, které jsou menší než průměrné hodnocení všech příspěvků]
+2) [Number of ratings per post that are less than the average rating of all posts]
 SELECT p.nazev, COUNT(h.hodnoceni) AS hodnota
 FROM prispevky AS p
 LEFT JOIN hodnoceni AS h
@@ -20,7 +20,7 @@ WHERE hodnoceni < (
 )
 GROUP BY (p.nazev);
 
-3) [Vypsání všech příspěvků podle průměru jejich hodnocení. Od nejlépe hodnoceného po nejhůře]
+3) [Listing of all contributions according to their average rating. From highest to lowest rated]
 SELECT p.nazev, AVG(h.hodnoceni) AS hodnoceni, u.prezdivka
 FROM prispevky AS p
 LEFT JOIN hodnoceni AS h
@@ -30,7 +30,7 @@ ON u.id = p.uzivatel_id
 GROUP BY (p.nazev, u.prezdivka)
 ORDER BY hodnoceni DESC;
 
-4) [Hierarchie; Vypsání všech uživatelů, jejich e-mailů a počtu příspěvků, kteří jsou moderátoři, admini nebo majitelé]
+4) [Hierarchy; List all users, their emails and the number of posts who are moderators, admins or owners]
 SELECT u.prezdivka, r.nazev, u.email, COUNT(p.id) AS pocet_prispevku
 FROM uzivatele AS u
 LEFT JOIN uzivatele_role AS ur
@@ -43,7 +43,7 @@ WHERE r.id > 1
 GROUP BY u.id, r.id
 ORDER BY r.id DESC;
 
-B) [Vypsání počtu majitelů, adminů, moderátorů, uživatelů a počet jejich příspěvků]
+B) [List the number of owners, admins, moderators, users and the number of their posts]
 CREATE OR REPLACE VIEW number_of_users AS
     SELECT r.nazev, COUNT(r.nazev) AS pocet_uzivatelu, COUNT(p.id) AS pocet_prispevku
     FROM role AS r
@@ -58,11 +58,11 @@ CREATE OR REPLACE VIEW number_of_users AS
     
 SELECT * FROM number_of_users;
 
-C) [Vytvoření indexového souboru nad sloupcem obsah v tabulce prispevky]
+C) [Creating an index file above the content column in the contributions table]
 CREATE UNIQUE INDEX idx_prispevky
 ON prispevky(obsah);
 
-D) [Funkce na výpočet komentářů v daném příspěvku]
+D) [Functions to calculate comments in a given post]
 CREATE OR REPLACE FUNCTION public.count_comm(IN komentar integer)
     RETURNS integer
     LANGUAGE 'plpgsql'
@@ -85,7 +85,7 @@ $BODY$;
 
 SELECT count_comm(1);
 
-E) [Vyměnit všechny hodnocení za náhodně vygenerované hodnocení (bez "Procedure" a "Transaction", doplněno v bodě G )]
+E) [Replace all ratings with randomly generated ratings (without "Procedure" and "Transaction", added in point G )]
 CREATE OR REPLACE FUNCTION public.random_hodnoceni()
     RETURNS void
     LANGUAGE 'plpgsql'
@@ -110,7 +110,7 @@ $BODY$;
 
 random_hodnoceni()
 
-F) [Trigger; Logování (zaznamenávání) změn dat v tabulce uzivatele]
+F) [Trigger; Logging (recording) data changes in the user table]
 CREATE OR REPLACE FUNCTION public.uzivatele_changes()
     RETURNS trigger
     LANGUAGE 'plpgsql'
@@ -141,7 +141,7 @@ UPDATE uzivatele
 SET email = 'kaska@gmail.com'
 WHERE id = 4;
 
-G) [Transakce; 50% šance na spuštění funkce E ]
+G) [Transaction; 50% chance of triggering the E function]
 CREATE OR REPLACE PROCEDURE public.random_random_hodnoceni()
     LANGUAGE 'plpgsql'
     
@@ -169,7 +169,7 @@ $BODY$;
 
 CALL random_random_hodnoceni()
 
-H) [Správa uživatelů a rolí; PLNĚ implementováno ve vizualizaci (SQLalchemy - ORM)]
+H) [Managing users and roles]
 CREATE USER kaska WITH PASSWORD '123';
 CREATE ROLE kaskaR;
 GRANT kaskaR TO kaska;
@@ -181,7 +181,7 @@ REVOKE SELECT ON ALL TABLES IN SCHEMA public FROM kaskaR;
 DROP ROLE kaskaR
 DROP USER kaska
 
-I) [LOCK TABLE; Implementováno ve vizualizaci]
+I) [LOCK TABLE]
 #1 Session
 BEGIN;
 LOCK TABLE role IN ACCESS EXCLUSIVE MODE;
@@ -192,7 +192,7 @@ SELECT * FROM role;
 
 UNLOCK = COMMIT, ROLLBACK
 
-[Doplňková funkce k bodu A) 1)]
+[Additional function to A) 1)]
 CREATE OR REPLACE FUNCTION public.count_rows_of_table(IN schema text,IN tablename text)
     RETURNS integer
     LANGUAGE 'plpgsql'

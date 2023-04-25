@@ -88,17 +88,17 @@ def showGrant(username, engineUser, enginePassword):
         print(e)
         return "error"
 
-def grant(metoda, username, engineUser, enginePassword):
+def grant(method, username, engineUser, enginePassword):
     try:
-        query = "GRANT {0} ON ALL TABLES IN SCHEMA public TO {1};".format(metoda,username)
+        query = "GRANT {0} ON ALL TABLES IN SCHEMA public TO {1};".format(method,username)
         engine(engineUser, enginePassword).execute(query)
     except Exception as e:
         print(e)
         return "error"
 
-def revoke(metoda, username, engineUser, enginePassword):
+def revoke(method, username, engineUser, enginePassword):
     try:
-        query = "REVOKE {0} ON ALL TABLES IN SCHEMA public FROM {1};".format(metoda,username)
+        query = "REVOKE {0} ON ALL TABLES IN SCHEMA public FROM {1};".format(method,username)
         engine(engineUser, enginePassword).execute(query)
     except Exception as e:
         print(e)

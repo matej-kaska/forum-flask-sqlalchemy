@@ -1,0 +1,114 @@
+{% extends "sablona.html" %} {% block main %}
+<article>
+  <header class="header text-center" style="color: black; padding-top: 4%">
+    <h1><span>Post</span></h1>
+  </header>
+</article>
+
+<form method="post">
+<section class="section position-center" id="Text" style="padding-left: 5%; padding-right: 5%">
+  <table class="table table-hover table-bordered bdr">
+    <tr>
+      <thead>
+      <th scope="row" style="text-align: center; vertical-align: middle;">{{ post[0][2] }}
+        {% if role != "user" %}
+        {% if role != "moderator" %}
+        <button type="submit" value="removePost" name="btn" style="text-align: center; vertical-align: middle;overflow: hidden;border: none;white-space: nowrap;padding: 0px;position: sticky;left: 98%;" class="btn btn-link"><span  id="boot-icon" class="bi bi-dash-square" style="font-size: 24px; color: rgb(2, 117, 216);"></span></button>
+        {% endif %}
+        {% endif %}
+        {% if session["username"] == post[0][3] %}
+        <button type="submit" value="removePost" name="btn" style="text-align: center; vertical-align: middle;overflow: hidden;border: none;white-space: nowrap;padding: 0px;position: sticky;left: 98%;" class="btn btn-link"><span  id="boot-icon" class="bi bi-dash-square" style="font-size: 24px; color: rgb(2, 117, 216);"></span></button>
+        {% endif %}
+      </th>
+      <th style="width: 20%;text-align: center; vertical-align: middle;">Author: {{ post[0][3] }}</th>
+      <th data-html="true" style="width: 18%;text-align: center; vertical-align: middle;" title="{{ rating }}"><select class="form-select" name="ratingselect" aria-label="Choose user" style="margin-right: 1%; margin-left:1%;text-align: center; vertical-align: middle;">
+        {% for i in range(1,6) %}
+        {% if userRating|string == i|string %}
+        <option selected value="{{ i }}">{{ i }}</option>
+        {% else %}
+        <option value="{{ i }}">{{ i }}</option>
+        {% endif %}
+        {% endfor %}
+    </select><button style="margin-left: 2%; margin-right: 2%;" type="submit" name="btn" value="rate" class="btn btn-primary btn-sm">Rate</button>Rating: 
+    {% if post[0][4]|string == "None" %}
+    None
+    {% else %}
+    {{ (post[0][4]|string)[0:3] }}
+    {% endif %}
+    </th>
+      </thead>
+    </tr>
+    <tr>
+      {% if post[0][5] == "NULL" %}
+      <td colspan="3">{{ post[0][1] }}</td>
+      {% else %}
+      <td colspan="2">{{ post[0][1] }}</td>
+      <td ><img src="{{ post[0][5] }}" width="256"></td>
+      {% endif %}
+    </tr>
+  </table>
+  </br>
+  {% if comments %}
+  <table class="table table-hover table-bordered bdr">
+    <tr>
+      <thead>
+      <th>Comments</th>
+      <th>Author</th>
+      </thead>
+    </tr>
+    {% for comment in comments %}
+    <tr scope="row" style="text-align: center; vertical-align: middle;">
+      <td>{{ comment[1] }}
+        {% if role != "user" %}
+        <button type="submit" value="removeComment{{ comment[0] }}" name="btn" style="text-align: center; vertical-align: middle;overflow: hidden;border: none;white-space: nowrap;padding: 0px;position: sticky;left: 98%;" class="btn btn-link"><span  id="boot-icon" class="bi bi-dash-square" style="font-size: 24px; color: rgb(2, 117, 216);"></span></button>
+        {% elif session["username"] == comment[2] %}
+        <button type="submit" value="removeComment{{ comment[0] }}" name="btn" style="text-align: center; vertical-align: middle;overflow: hidden;border: none;white-space: nowrap;padding: 0px;position: sticky;left: 98%;" class="btn btn-link"><span  id="boot-icon" class="bi bi-dash-square" style="font-size: 24px; color: rgb(2, 117, 216);"></span></button>
+        {% endif %}
+      </td>
+      <td style="text-align: center; vertical-align: middle;width: 20%">{{ comment[2] }}</td>
+    </tr>
+    {% for answer in answers %}
+        {% if answer[0] == comment[0] %}
+        <tr scope="row" style="text-align: center; vertical-align: middle;">
+            <td colspan="2">{{ answer[1] }} (Author: {{ answer[2] }})
+              {% if role != "user" %}
+              <button type="submit" value="removeAnswer{{ answer[3] }}" name="btn" style="text-align: center; vertical-align: middle;overflow: hidden;border: none;white-space: nowrap;padding: 0px;position: sticky;left: 98%;" class="btn btn-link"><span  id="boot-icon" class="bi bi-dash-square" style="font-size: 24px; color: rgb(2, 117, 216);"></span></button>
+              {% elif session["username"] == answer[2] %}
+              <button type="submit" value="removeAnswer{{ answer[3] }}" name="btn" style="text-align: center; vertical-align: middle;overflow: hidden;border: none;white-space: nowrap;padding: 0px;position: sticky;left: 98%;" class="btn btn-link"><span  id="boot-icon" class="bi bi-dash-square" style="font-size: 24px; color: rgb(2, 117, 216);"></span></button>
+              {% endif %}
+            </td>
+        </tr>    
+        {% endif %}
+    {% endfor %}
+    <tr>
+      <td colspan="2" style="text-align: center; vertical-align: middle;">
+          <div class ="row" style="justify-content: center; vertical-align: middle; text-align: center;">
+            <input  id="forAnsw" style="margin-left: 10px; margin-top: 10px; width: 85%;" type="text" class="form-control" name="newAnswer{{ comment[0] }}" placeholder="Answer" style="background-color: #333333; color: white"></input>
+            <button class="btn btn-primary" type="submit" name="btn" value="addAnswer{{ comment[0] }}" style="margin-top: 10px; margin-left: 10px;">
+              Add answer
+            </button>
+          </div>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+  <table class="table table-hover table-bordered bdr">
+    <tr>
+      <thead>
+      <th>Add comment</th>
+      </thead>
+    </tr>
+    <tr>
+      <td><textarea  id="forComm" style="height:100px" type="text" class="form-control" name="newComment" placeholder="Enter text" style="background-color: #333333; color: white"></textarea>
+        <div class="float-right">
+          <button class="btn btn-primary" type="submit" name="btn" value="addComment" style="justify-content: left; margin-top: 10px;">
+            Add comment
+          </button>
+        </div>
+      </td>
+    </tr>
+  </table>
+</section>
+</form>
+{% endblock %}

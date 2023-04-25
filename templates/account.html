@@ -1,7 +1,7 @@
-{% extends "sablona.html" %} {% block main %}
+{% extends "template.html" %} {% block main %}
 <article>
   <header class="header text-center" style="color: black; padding-top: 4%">
-    <h1><span>Účet</span></h1>
+    <h1><span>Account</span></h1>
   </header>
 </article>
 
@@ -9,12 +9,12 @@
 <section class="section position-center" id="Text" style="padding-left: 10%; padding-right: 10%">
   <table class="table table-hover table-bordered bdr">
     <tr>
-        <th style="width: 20%; text-align: center; vertical-align: middle;">Přezdívka</th>
+        <th style="width: 20%; text-align: center; vertical-align: middle;">Username</th>
         <td colspan="2" style="text-align: center; vertical-align: middle;">
           <div id="changeUsernametext" >
             {{ user[0] }}
           </div>
-          <input style="display: none;background-color: #333333; color: white;margin-left: 10px; width: 85%;" id="changeUsernameinput" type="text" class="form-control" name="changeUsernameinput" placeholder="Přezdívka"></input>
+          <input style="display: none;background-color: #333333; color: white;margin-left: 10px; width: 85%;" id="changeUsernameinput" type="text" class="form-control" name="changeUsernameinput" placeholder="Username"></input>
         </td>
     </tr>
     <tr>
@@ -25,25 +25,25 @@
           </div>
           <input style="display: none;background-color: #333333; color: white;margin-left: 10px; width: 85%;" id="changeEmailinput" type="email" class="form-control" name="changeEmailinput" placeholder="E-mail"></input>
         </td>
-        <td style="width:10%"><button onclick="edit('changeEmail')" class="btn btn-primary" type="button" name="changeEmail" value="changeEmail" style="justify-content: left; margin-top: 3px;">Změnit</button></td>
+        <td style="width:10%"><button onclick="edit('changeEmail')" class="btn btn-primary" type="button" name="changeEmail" value="changeEmail" style="justify-content: left; margin-top: 3px;">Change</button></td>
     </tr>
     <tr>
-        <th style="width: 20%; text-align: center; vertical-align: middle;">Heslo</th>
+        <th style="width: 20%; text-align: center; vertical-align: middle;">Password</th>
         <td style="text-align: center; vertical-align: middle;">
           <div id="changePasswordtext" >
             *************
           </div>
-          <input style="display: none;background-color: #333333; color: white;margin-left: 10px; width: 85%;" id="changePasswordinput" type="text" class="form-control" name="changePasswordinput" placeholder="Heslo"></input>
+          <input style="display: none;background-color: #333333; color: white;margin-left: 10px; width: 85%;" id="changePasswordinput" type="text" class="form-control" name="changePasswordinput" placeholder="Password"></input>
         </td>
-        <td style="width:10%"><button onclick="edit('changePassword')"class="btn btn-primary" type="button" name="changePassword" value="changePassword" style="justify-content: left; margin-top: 3px;">Změnit</button></td>
+        <td style="width:10%"><button onclick="edit('changePassword')"class="btn btn-primary" type="button" name="changePassword" value="changePassword" style="justify-content: left; margin-top: 3px;">Change</button></td>
     </tr>
   </table>
       <div class="float-right">
         <button class="btn btn-dark" type="submit" name="btn" value="changeDetails" style="justify-content: left; margin-top: 3px;">
-          Změnit údaje
+          Change details
         </button>
         <button class="btn btn-danger" type="submit" name="btn" value="deleteAccount" style="justify-content: left; margin-top: 3px;">
-          Smazat účet
+          Delete account
         </button>
       </div>
     </form>
