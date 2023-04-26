@@ -181,7 +181,7 @@ def register():
                 session["enginePass"] = "123"
                 session["roleuser"] = ""
                 session["privuser"] = ""
-                session["selectedtabulka"] = ""
+                session["selectedtable"] = ""
                 flash("regsucces")
                 return redirect(url_for("forum"))
             else:
@@ -231,7 +231,7 @@ def index():
                     session["enginePass"] = "123"
                     session["roleuser"] = ""
                     session["privuser"] = ""
-                    session["selectedtabulka"] = ""
+                    session["selectedtable"] = ""
                     flash("loginsucces")
                     return redirect(request.referrer)  
                 else:
@@ -278,7 +278,7 @@ def post(id):
     if session.get("username"):
         if request.method == "POST":
             if request.form["btn"] == "rate":
-                rating = request.form.get("rateGet")
+                rating = request.form.get("ratingselect")
                 if postgreSQL.execute("SELECT id FROM hodnoceni WHERE uzivatel_id = '{0}' AND prispevek_id = '{1}'".format(session["userid"], id)).fetchone() is None:
                     # ===> Add rating to post <===
                     # ---> orm-flask-sqlalchemy <--
@@ -319,8 +319,8 @@ def post(id):
                     # ---> sql <--
                     else:
                         postgreSQL.execute("INSERT INTO komentare (text, uzivatel_id, prispevek_id) VALUES ('{0}', '{1}', '{2}')".format(commentText, session["userid"], id))
-            elif request.form["btn"][0:10] == "addAnswer":
-                commentID = request.form["btn"][10:]
+            elif request.form["btn"][0:9] == "addAnswer":
+                commentID = request.form["btn"][9:]
                 answerText = request.form.get("newAnswer" + commentID)
                 if answerText != "":
                     # ===> Adding answer to comment <===
@@ -356,8 +356,8 @@ def post(id):
                         postgreSQL.execute("DELETE FROM komentare WHERE prispevek_id = {0};".format(id))
                         postgreSQL.execute("DELETE FROM prispevky WHERE id = {0};".format(id))
                     return redirect(url_for("forum"))
-            elif request.form["btn"][0:14] == "removeComment":
-                commentID = request.form["btn"][14:]
+            elif request.form["btn"][0:13] == "removeComment":
+                commentID = request.form["btn"][13:]
                 # ===> Removing comments and answers <===
                 # ---> orm-flask-sqlalchemy <--
                 if orm_flasksqlalchemy:
@@ -368,8 +368,8 @@ def post(id):
                 else:
                     postgreSQL.execute("DELETE FROM odpovedi WHERE komentar_id = {0};".format(commentID))
                     postgreSQL.execute("DELETE FROM komentare WHERE id = {0};".format(commentID))
-            elif request.form["btn"][0:13] == "removeAnswer":
-                answerID = request.form["btn"][13:]
+            elif request.form["btn"][0:12] == "removeAnswer":
+                answerID = request.form["btn"][12:]
                 # ===> Removing answer <===
                 # ---> orm-flask-sqlalchemy <--
                 if orm_flasksqlalchemy:
@@ -421,7 +421,7 @@ def sql():
         tables = queryToList(listTables(session["engineUser"], session["enginePass"]))
         tabledata = queryToList(lockTable(session["selectedtable"], session["engineUser"], session["enginePass"]))
         if request.method == "GET":
-            return render_template("sql.html", session=session, role=role(session), engineusers=finalusers, users=users, roles=roles, rolesofuser=rolesofuser, roleuser=session["roleuser"], privofuser=privofuser, privuser=session["privuser"], selectedtable=session["selectedtable"], tables=tables, tabledata=tabledata, engineUser=session["engineUser"])
+            return render_template("sql.html", session=session, role=role(session), engineUsers=finalusers, users=users, roles=roles, rolesofuser=rolesofuser, roleuser=session["roleuser"], privofuser=privofuser, privuser=session["privuser"], selectedtable=session["selectedtable"], tables=tables, tabledata=tabledata, engineUser=session["engineUser"])
         if request.method == "POST":
             if request.form["btn"] == "changeuser":
                 if engine(request.form.get("userselect"), request.form.get("changeuserpass")) != "wrongpass":
@@ -499,7 +499,7 @@ def sql():
             tabledata = queryToList(lockTable(session["selectedtable"], session["engineUser"], session["enginePass"]))
             if request.form["btn"] != "logout":
                 if request.form["btn"] != "flask":
-                    return render_template("sql.html", session=session, role=role(session), engineusers=finalusers, users=users, roles=roles, rolesofuser=rolesofuser, roleuser=session["roleuser"], privofuser=privofuser, privuser=session["privuser"], selectedtable=session["selectedtable"], tables=tables, tabledata=tabledata, engineUser=session["engineUser"])
+                    return render_template("sql.html", session=session, role=role(session), engineUsers=finalusers, users=users, roles=roles, rolesofuser=rolesofuser, roleuser=session["roleuser"], privofuser=privofuser, privuser=session["privuser"], selectedtable=session["selectedtable"], tables=tables, tabledata=tabledata, engineUser=session["engineUser"])
         return catchall(path)
     else:
         return redirect(url_for("index"))
@@ -541,8 +541,8 @@ def rolesWeb():
         if role(session) == "owner":
             if request.method == "POST":
                 if request.form["btn"] == "changerole":
-                    changedUser = request.form.get("userselect")
-                    changedRole = request.form.get("roleselect")
+                    changedUser = request.form.get("userSelect")
+                    changedRole = request.form.get("roleSelect")
                     # ===> Getting ID of user and his roles <===
                     # ---> orm-flask-sqlalchemy <--
                     if orm_flasksqlalchemy:
@@ -638,6 +638,9 @@ def account():
                         hashed_pass = hashlib.sha256(changedPassword.encode("utf-8")).hexdigest()
                         postgreSQL.execute("UPDATE uzivatele SET heslo = '{0}' WHERE id = '{1}'".format(hashed_pass, session["userid"]))
             if request.form["btn"] == "deleteAccount":
+                if "owner" == role(session):
+                    flash("ownerdelerror")
+                    return redirect(url_for("index"))
                 # ===> Removing user, their posts, comments, answers and ratings <===
                 # ---> orm-flask-sqlalchemy <--
                 if orm_flasksqlalchemy:

@@ -150,6 +150,11 @@
       This username or e-mail already exists!
     </div>
 
+    {% elif message == "ownerdelerror" %}
+    <div class="alert alert-danger alert-dismissible fade show js-alert" id="error-alert" role="alert">
+      You can't delete owner!
+    </div>
+
     {% endif %} {% endfor %} {% endif %} {% endwith %}
 
     <header>
