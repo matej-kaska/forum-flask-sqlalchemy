@@ -57,7 +57,7 @@ Load SQL database:
   git switch main-cz
 ```
 
-Start (in root folder):
+Start app.py (in root folder):
 
 ```bash
   & <path for python.exe> <path for app.py>
