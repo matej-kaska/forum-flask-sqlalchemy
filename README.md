@@ -1,4 +1,4 @@
-![Banner]()
+![Banner](https://github.com/matej-kaska/forum-flask-sqlalchemy/blob/main/readme-assets/forum-banner.png?raw=true)
 
 # Forum flask-sqlalchemy
 
@@ -63,20 +63,20 @@ Start (in root folder):
 
 ## Screenshots 🖥
 
-![Forum Screenshot]()
+![Forum Screenshot](https://github.com/matej-kaska/forum-flask-sqlalchemy/blob/main/readme-assets/screenshot-2023-04-26-19-18-48.png?raw=true)
 
-![Post Screenshot]()
+![Post Screenshot](https://github.com/matej-kaska/forum-flask-sqlalchemy/blob/main/readme-assets/screenshot-2023-04-26-19-23-01.png?raw=true)
 
-![New post Screenshot]()
+![New post Screenshot](https://github.com/matej-kaska/forum-flask-sqlalchemy/blob/main/readme-assets/screenshot-2023-04-26-19-20-23.png?raw=true)
 
-![User Screenshot]()
+![User Screenshot](https://github.com/matej-kaska/forum-flask-sqlalchemy/blob/main/readme-assets/screenshot-2023-04-26-19-19-37.png?raw=true)
 
-![Admin panel Screenshot]()
+![Admin panel Screenshot](https://github.com/matej-kaska/forum-flask-sqlalchemy/blob/main/readme-assets/screenshot-2023-04-26-19-20-03.png?raw=true)
 
-![Audits Screenshot]()
+![Audits Screenshot](https://github.com/matej-kaska/forum-flask-sqlalchemy/blob/main/readme-assets/screenshot-2023-04-26-19-19-05.png?raw=true)
 
-![SQL Screenshot]()
+![SQL Screenshot](https://github.com/matej-kaska/forum-flask-sqlalchemy/blob/main/readme-assets/screenshot-2023-04-26-19-19-21.png?raw=true)
 
-![Log in Screenshot]()
+![Log in Screenshot](https://github.com/matej-kaska/forum-flask-sqlalchemy/blob/main/readme-assets/screenshot-2023-04-26-19-17-32.png?raw=true)
 
-![Sign up Screenshot]()
+![Sign up Screenshot](https://github.com/matej-kaska/forum-flask-sqlalchemy/blob/main/readme-assets/screenshot-2023-04-26-19-18-12.png?raw=true)
