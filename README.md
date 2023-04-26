@@ -41,7 +41,9 @@ Install packages (in root folder):
 
 Install PostgreSQL with pgAdmin:
 
+```
 https://ftp.postgresql.org/pub/pgadmin/pgadmin4/v7.0/windows/pgadmin4-7.0-x64.exe
+```
 
 Load SQL database:
 
